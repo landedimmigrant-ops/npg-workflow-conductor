@@ -1,0 +1,1171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NPG Living Lab - Workflow Conductor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f7f4f0;
+  --paper:#fffdfb;
+  --ink:#20102f;
+  --muted:#745f86;
+  --faint:#ad9abc;
+  --line:#ddd2e7;
+  --wash:#f0eaf6;
+  --purple:#673091;
+  --violet:#8a55bf;
+  --green:#3d8d52;
+  --lime:#5ec244;
+  --amber:#b45309;
+  --red:#ad2f3b;
+  --blue:#3366a3;
+  --shadow:0 20px 60px rgba(52,26,78,.12);
+}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--ink);font-family:"Inter Tight",system-ui,sans-serif}
+button,input,textarea,select{font:inherit}
+button{cursor:pointer}
+.app{height:100%;display:grid;grid-template-rows:auto 1fr auto}
+.topbar{
+  height:56px;display:flex;align-items:center;gap:12px;padding:0 18px;
+  background:rgba(255,253,251,.94);border-bottom:1px solid var(--line);
+}
+.brand{display:flex;align-items:baseline;gap:10px;white-space:nowrap}
+.brand-kicker{font-size:10px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--faint)}
+.brand-title{font-size:15px;font-weight:800;color:var(--purple)}
+.top-pill{
+  padding:6px 11px;border-radius:999px;border:1px solid rgba(103,48,145,.16);
+  background:rgba(103,48,145,.06);font-size:12px;font-weight:800;color:var(--purple);
+}
+.spacer{flex:1}
+.top-btn,.select{
+  border:1px solid var(--line);background:var(--paper);color:var(--muted);
+  border-radius:9px;padding:8px 12px;font-size:12px;font-weight:800;
+  transition:all .15s;
+}
+.top-btn:hover,.select:hover{border-color:#bca8d4;color:var(--purple)}
+.top-btn.primary{background:var(--purple);border-color:var(--purple);color:#fff}
+.top-btn.playing{background:var(--green);border-color:var(--green);color:#fff}
+.main{
+  min-height:0;display:grid;grid-template-columns:230px minmax(520px,1fr) 330px;
+  gap:18px;padding:18px;overflow:hidden;
+}
+.rail,.stage,.lab{
+  min-height:0;background:rgba(255,253,251,.82);border:1px solid var(--line);
+  border-radius:16px;box-shadow:var(--shadow);
+}
+.rail{overflow:auto;padding:14px}
+.rail-hd,.panel-hd{
+  font-size:10px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);
+  margin-bottom:12px;
+}
+.phase-card{
+  border:1px solid var(--line);border-radius:12px;background:var(--paper);
+  padding:12px;margin-bottom:10px;transition:all .2s;
+}
+.phase-card.current{border-color:var(--phase);box-shadow:inset 4px 0 0 var(--phase);background:#fff}
+.phase-num{font-size:10px;font-weight:800;color:var(--phase);letter-spacing:.12em;text-transform:uppercase}
+.phase-name{font-size:17px;font-weight:800;line-height:1.05;margin-top:5px}
+.phase-meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:9px;color:var(--muted);font-size:11px}
+.phase-promise{font-size:12px;line-height:1.35;color:var(--muted);margin-top:8px}
+.mini-meter{height:5px;background:var(--wash);border-radius:20px;margin-top:9px;overflow:hidden}
+.mini-fill{height:100%;width:0;background:var(--phase);border-radius:20px;transition:width .25s}
+.phase-step{
+  display:flex;align-items:center;gap:8px;margin-top:8px;border:none;background:transparent;text-align:left;color:var(--muted);
+  font-size:12px;font-weight:650;line-height:1.25;width:100%;padding:6px 7px;border-radius:8px;
+}
+.phase-step:hover{background:var(--wash);color:var(--purple)}
+.phase-step.current{background:rgba(103,48,145,.09);color:var(--purple)}
+.stage{position:relative;overflow:hidden;display:grid;grid-template-rows:1fr auto}
+.stage-inner{overflow:auto;padding:28px}
+.eyebrow{font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--phase)}
+.stage-head{display:flex;align-items:flex-start;gap:18px;margin-top:9px;max-width:930px}
+.step-icon{
+  width:72px;height:72px;flex:0 0 72px;border-radius:19px;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--phase);background:linear-gradient(180deg,#fff,rgba(240,234,246,.8));
+  border:1px solid rgba(103,48,145,.18);
+  box-shadow:inset 0 0 0 6px rgba(255,255,255,.56);
+}
+.step-icon svg{width:38px;height:38px;display:block}
+.mini-icon{
+  width:22px;height:22px;border-radius:7px;display:inline-flex;align-items:center;justify-content:center;
+  color:var(--phase);background:rgba(103,48,145,.07);border:1px solid rgba(103,48,145,.12);flex:0 0 22px;
+}
+.mini-icon svg{width:14px;height:14px;display:block}
+.map-node .mini-icon{margin-bottom:9px;color:var(--phase);background:#fff;border-color:var(--line)}
+.map-node.current .mini-icon{color:#fff;background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.26)}
+.stage-title{font-size:54px;line-height:.96;letter-spacing:0;font-weight:800;max-width:860px;margin-top:9px}
+.stage-copy{font-size:20px;line-height:1.55;color:var(--muted);max-width:860px;margin-top:20px}
+.time-strip{display:grid;grid-template-columns:1.05fr 1fr 1fr;gap:10px;max-width:860px;margin-top:18px}
+.time-chip{
+  border:1px solid rgba(103,48,145,.16);background:rgba(103,48,145,.055);
+  border-radius:13px;padding:10px 12px;
+}
+.time-label{font-size:9px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);margin-bottom:4px}
+.time-value{font-size:14px;line-height:1.25;color:var(--ink);font-weight:800}
+.time-note{font-size:12px;line-height:1.3;color:var(--muted);margin-top:3px;font-weight:650}
+.walk-deck{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:24px}
+.walk-card{
+  border:1px solid var(--line);border-radius:14px;background:var(--paper);padding:14px;
+  min-height:148px;position:relative;overflow:hidden;
+}
+.walk-card::before{
+  content:"";position:absolute;inset:0 auto 0 0;width:4px;background:var(--phase);
+  opacity:.75;
+}
+.walk-card-label{
+  font-size:10px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);
+  margin-bottom:10px;padding-left:2px;
+}
+.walk-list{display:grid;gap:8px}
+.walk-item{display:flex;gap:8px;font-size:13px;line-height:1.35;color:var(--muted);font-weight:600}
+.walk-item::before{
+  content:"";width:6px;height:6px;border-radius:50%;background:var(--phase);
+  margin-top:6px;flex:0 0 6px;opacity:.82;
+}
+.stage-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:18px;margin-top:24px}
+.artifact,.question,.focus-map,.note-box{
+  border:1px solid var(--line);border-radius:14px;background:var(--paper);padding:16px;
+}
+.section-label{font-size:10px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);margin-bottom:10px}
+.artifact-list{display:grid;gap:8px}
+.artifact-row{display:flex;gap:10px;align-items:flex-start;color:var(--muted);font-size:15px;line-height:1.35}
+.artifact-row::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--phase);margin-top:7px;flex:none}
+.question{border-color:rgba(180,83,9,.24);background:rgba(180,83,9,.055)}
+.question-text{font-size:17px;line-height:1.5;color:#673406;font-weight:650}
+.risk-text{margin-top:12px;font-size:14px;line-height:1.45;color:#7b4210}
+.risk-text b{color:#4d2703}
+.status-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}
+.status-btn{
+  border:1px solid var(--line);background:var(--paper);color:var(--muted);
+  border-radius:999px;padding:8px 13px;font-size:12px;font-weight:800;
+}
+.status-btn.on[data-status="unknown"]{border-color:var(--violet);background:rgba(138,85,191,.08);color:var(--purple)}
+.status-btn.on[data-status="fragile"]{border-color:var(--amber);background:rgba(180,83,9,.08);color:var(--amber)}
+.status-btn.on[data-status="ready"]{border-color:var(--green);background:rgba(61,141,82,.08);color:var(--green)}
+.mvp-tag{
+  display:inline-flex;align-items:center;margin-left:8px;padding:4px 8px;border-radius:999px;
+  background:rgba(94,194,68,.12);border:1px solid rgba(61,141,82,.2);color:var(--green);
+  font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;vertical-align:middle;
+}
+.focus-map{margin-top:18px}
+.map-row{display:grid;grid-template-columns:1fr 34px 1.25fr 34px 1fr;gap:0;align-items:stretch}
+.map-node{
+  min-height:104px;border:1px solid var(--line);border-radius:13px;background:var(--wash);
+  display:flex;flex-direction:column;justify-content:center;padding:13px;
+}
+.map-node.current{background:var(--ink);border-color:var(--ink);color:#fff}
+.map-node.empty{border-style:dashed;background:transparent;box-shadow:none;opacity:.72}
+.map-label{font-size:9px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--faint)}
+.map-node.current .map-label{color:rgba(255,255,255,.56)}
+.map-title{font-size:16px;font-weight:800;line-height:1.1;margin-top:7px}
+.map-arrow{display:flex;align-items:center;justify-content:center;color:var(--phase);font-weight:800}
+.note-box{margin-top:18px}
+.feedback-head{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:10px}
+.feedback-rating{display:flex;align-items:center;gap:8px}
+.thumb-btn{
+  width:38px;height:38px;border-radius:12px;border:1px solid var(--line);background:var(--paper);
+  color:var(--muted);display:inline-flex;align-items:center;justify-content:center;transition:all .15s;
+}
+.thumb-btn svg{width:19px;height:19px}
+.thumb-btn:hover{border-color:rgba(103,48,145,.25);color:var(--purple);background:rgba(103,48,145,.05)}
+.thumb-btn.on[data-thumb="up"]{border-color:rgba(61,141,82,.32);background:rgba(61,141,82,.1);color:var(--green)}
+.thumb-btn.on[data-thumb="down"]{border-color:rgba(173,47,59,.3);background:rgba(173,47,59,.08);color:var(--red)}
+.notes{
+  width:100%;min-height:82px;resize:vertical;border:1px solid var(--line);background:var(--wash);
+  border-radius:12px;padding:12px;color:var(--ink);outline:none;font-size:15px;line-height:1.45;
+}
+.notes:focus{border-color:var(--phase)}
+.stage-footer{
+  border-top:1px solid var(--line);background:rgba(255,253,251,.92);
+  display:flex;align-items:center;gap:10px;padding:13px 18px;
+}
+.nav-btn{
+  width:44px;height:44px;border-radius:50%;border:1px solid var(--line);
+  background:var(--paper);color:var(--purple);font-size:18px;font-weight:800;
+}
+.nav-btn:disabled{opacity:.32;cursor:default}
+.next-btn{
+  border:none;background:var(--purple);color:#fff;border-radius:999px;
+  padding:13px 18px;font-size:13px;font-weight:800;
+}
+.step-caption{font-size:12px;color:var(--muted);font-weight:700}
+.lab{overflow:auto;padding:16px}
+.phase-review{
+  border:1px solid var(--line);border-radius:15px;background:var(--paper);padding:15px;margin-bottom:14px;
+  box-shadow:inset 4px 0 0 var(--phase);
+}
+.phase-review-title{font-size:18px;font-weight:800;line-height:1.08;margin-bottom:7px}
+.phase-review-copy{font-size:13px;line-height:1.42;color:var(--muted);margin-bottom:12px}
+.phase-time{
+  display:grid;grid-template-columns:1fr 1fr;gap:8px;border-top:1px solid var(--line);
+  padding-top:10px;margin-top:10px;
+}
+.phase-time-box{
+  border:1px solid rgba(103,48,145,.12);background:rgba(103,48,145,.045);
+  border-radius:10px;padding:8px;
+}
+.phase-time-num{font-size:14px;font-weight:800;color:var(--purple);line-height:1.1}
+.phase-time-cap{font-size:9px;font-weight:800;letter-spacing:.11em;text-transform:uppercase;color:var(--faint);margin-top:4px}
+.phase-gate{border-top:1px solid var(--line);padding-top:10px;margin-top:10px}
+.phase-gate-label{
+  font-size:9px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);
+  margin-bottom:5px;
+}
+.phase-gate-text{font-size:13px;line-height:1.38;color:var(--ink);font-weight:700}
+.dependency-strip{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
+.dependency-chip{
+  border:1px solid rgba(103,48,145,.15);background:rgba(103,48,145,.06);color:var(--purple);
+  border-radius:999px;padding:5px 8px;font-size:10px;font-weight:800;
+}
+.score-card{
+  border-radius:15px;background:var(--ink);color:#fff;padding:18px;margin-bottom:14px;
+}
+.score-row{display:flex;align-items:flex-end;gap:12px}
+.score{font-size:60px;line-height:.82;font-weight:800}
+.score-copy{font-size:13px;line-height:1.4;color:rgba(255,255,255,.72);padding-bottom:3px}
+.score-bar{height:8px;background:rgba(255,255,255,.13);border-radius:999px;overflow:hidden;margin-top:16px}
+.score-fill{height:100%;width:0;background:var(--lime);border-radius:999px;transition:width .25s}
+.preset-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-bottom:14px}
+.preset{
+  border:1px solid var(--line);background:var(--paper);border-radius:10px;
+  padding:9px 7px;font-size:11px;font-weight:800;color:var(--muted);
+}
+.preset.on{background:rgba(103,48,145,.09);border-color:rgba(103,48,145,.22);color:var(--purple)}
+.lever{padding:13px 0;border-top:1px solid var(--line)}
+.lever-top{display:flex;justify-content:space-between;gap:10px;margin-bottom:8px}
+.lever-name{font-size:13px;font-weight:800;color:var(--ink)}
+.lever-val{font-size:12px;font-weight:800;color:var(--purple)}
+.lever input{width:100%;accent-color:var(--purple)}
+.risk-list{display:grid;gap:8px;margin-top:12px}
+.risk-card{
+  border:1px solid var(--line);border-radius:11px;background:var(--paper);padding:11px;
+  font-size:12px;line-height:1.42;color:var(--muted);
+}
+.risk-card.high{border-color:rgba(173,47,59,.24);background:rgba(173,47,59,.045)}
+.risk-card.med{border-color:rgba(180,83,9,.24);background:rgba(180,83,9,.055)}
+.risk-card b{display:block;color:var(--ink);margin-bottom:3px}
+.timeline{
+  min-height:66px;display:flex;align-items:center;gap:14px;padding:10px 18px;
+  border-top:1px solid var(--line);background:rgba(255,253,251,.92);
+}
+.progress{flex:1;display:flex;align-items:center;gap:8px;overflow:hidden}
+.phase-strip{display:flex;align-items:center;gap:4px;min-width:0}
+.strip-label{font-size:10px;font-weight:800;color:var(--faint);min-width:22px}
+.dot{
+  width:9px;height:9px;border-radius:50%;border:1px solid var(--line);background:var(--wash);
+  flex:0 0 auto;
+}
+.dot.ready{background:var(--green);border-color:var(--green)}
+.dot.fragile{background:var(--amber);border-color:var(--amber)}
+.dot.current{width:13px;height:13px;background:var(--purple);border-color:var(--purple)}
+.modal{
+  position:fixed;inset:0;background:rgba(32,16,47,.45);display:none;align-items:center;justify-content:center;
+  padding:28px;z-index:20;
+}
+.modal.show{display:flex}
+.modal-box{
+  width:min(760px,100%);max-height:86vh;display:grid;grid-template-rows:auto 1fr auto;
+  background:var(--paper);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);
+}
+.modal-head,.modal-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 18px;border-bottom:1px solid var(--line)}
+.modal-foot{border-top:1px solid var(--line);border-bottom:none;justify-content:flex-end}
+.modal-title{font-size:16px;font-weight:800}
+.modal-close{border:none;background:transparent;font-size:20px;color:var(--muted)}
+.debrief{margin:18px;width:calc(100% - 36px);height:420px;resize:none;border:1px solid var(--line);border-radius:12px;background:var(--wash);padding:14px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;line-height:1.55;color:var(--ink)}
+.about-box{width:min(820px,100%)}
+.about-body{overflow:auto;padding:18px;display:grid;gap:16px}
+.about-intro{
+  border:1px solid rgba(103,48,145,.16);background:rgba(103,48,145,.055);
+  border-radius:14px;padding:15px;font-size:16px;line-height:1.48;color:var(--muted);
+}
+.about-section{border-top:1px solid var(--line);padding-top:14px}
+.about-section:first-of-type{border-top:none;padding-top:0}
+.about-heading{font-size:13px;font-weight:800;color:var(--ink);margin-bottom:8px}
+.about-list{display:grid;gap:8px}
+.about-row{font-size:14px;line-height:1.42;color:var(--muted)}
+.about-row b{color:var(--ink)}
+.feedback-preview{
+  margin-top:12px;width:100%;height:220px;resize:vertical;border:1px solid var(--line);
+  border-radius:12px;background:var(--wash);padding:12px;color:var(--ink);
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;line-height:1.5;
+}
+.feedback-note{font-size:13px;line-height:1.45;color:var(--muted);margin-top:8px}
+.secondary-btn{border:1px solid var(--line);background:var(--paper);color:var(--purple);border-radius:9px;padding:9px 13px;font-size:12px;font-weight:800}
+.copy-btn{border:none;background:var(--green);color:#fff;border-radius:9px;padding:9px 13px;font-size:12px;font-weight:800}
+@media(max-width:1100px){
+  .main{grid-template-columns:190px minmax(420px,1fr);grid-template-rows:1fr 270px}
+  .lab{grid-column:1 / -1}
+}
+@media(max-width:760px){
+  html,body{overflow:auto;overflow-x:hidden}
+  .app{min-height:100%;height:auto}
+  .topbar{position:sticky;top:0;z-index:10;flex-wrap:wrap;height:auto;padding:10px}
+  #debriefBtn{display:none}
+  .brand-title,.select{display:none}
+  .main{display:flex;flex-direction:column;overflow:visible;padding:10px;width:100%;max-width:100%}
+  .stage{order:1}
+  .lab{order:2}
+  .rail{order:3;max-height:460px}
+  .rail,.stage,.lab{margin-bottom:12px;width:100%;max-width:100%;min-width:0}
+  .stage-inner{padding:22px 16px}
+  .stage-head{display:block;margin-top:12px}
+  .step-icon{width:54px;height:54px;border-radius:15px;margin-bottom:12px}
+  .step-icon svg{width:30px;height:30px}
+  .stage-title{font-size:28px;line-height:1.05;width:calc(100vw - 54px);max-width:calc(100vw - 54px);white-space:normal;overflow-wrap:break-word}
+  .stage-copy{font-size:18px}
+  .time-strip{grid-template-columns:1fr;width:calc(100vw - 54px);max-width:calc(100vw - 54px)}
+  .walk-deck{grid-template-columns:1fr;width:calc(100vw - 54px);max-width:calc(100vw - 54px)}
+  .walk-card{min-height:auto}
+  .question-text{font-size:15px}
+  .stage-copy,.artifact,.question,.focus-map,.note-box,.stage-footer{width:calc(100vw - 54px);max-width:calc(100vw - 54px)}
+  .stage-copy,.question-text,.risk-text,.artifact-row,.map-title,.walk-item,.time-value,.time-note{
+    width:290px;max-width:100%;
+    overflow-wrap:anywhere;word-break:break-word;
+  }
+  .stage-grid,.map-row{display:block}
+  .question{margin-top:12px}
+  .map-arrow{height:28px}
+  .timeline{position:static;bottom:auto;max-width:100%;overflow:hidden}
+  .progress{min-width:0;overflow:hidden}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-kicker">AbInt Phase 2</span>
+      <span class="brand-title">NPG Workflow Conductor</span>
+    </div>
+    <span class="top-pill" id="phasePill">Phase 1</span>
+    <div class="spacer"></div>
+    <button class="top-btn" id="playBtn">Auto</button>
+    <select class="select" id="speedSel" aria-label="Auto speed">
+      <option value="6000">Room pace</option>
+      <option value="3800">Fast pass</option>
+      <option value="8500">Slow narration</option>
+    </select>
+    <button class="top-btn" id="aboutBtn">About</button>
+    <button class="top-btn" id="feedbackBtn">Feedback</button>
+    <button class="top-btn" id="debriefBtn">Debrief</button>
+  </header>
+
+  <main class="main">
+    <aside class="rail">
+      <div class="rail-hd">Workflow spine</div>
+      <div id="phaseRail"></div>
+    </aside>
+
+    <section class="stage">
+      <div class="stage-inner">
+        <div class="eyebrow" id="stepEye"></div>
+        <div class="stage-head">
+          <div class="step-icon" id="stepIcon" aria-hidden="true"></div>
+          <h1 class="stage-title" id="stepTitle"></h1>
+        </div>
+        <p class="stage-copy" id="stepCopy"></p>
+        <div class="time-strip" id="timeStrip"></div>
+        <div class="walk-deck" id="walkDeck"></div>
+        <div class="stage-grid">
+          <div class="artifact">
+            <div class="section-label">What this produces</div>
+            <div class="artifact-list" id="artifactList"></div>
+          </div>
+          <div class="question">
+            <div class="section-label">Simulation question</div>
+            <div class="question-text" id="questionText"></div>
+            <div class="risk-text" id="riskText"></div>
+          </div>
+        </div>
+        <div class="status-row" id="statusRow"></div>
+        <div class="focus-map">
+          <div class="section-label">Flow</div>
+          <div class="map-row" id="focusMap"></div>
+        </div>
+        <div class="note-box">
+          <div class="feedback-head">
+            <div class="section-label" style="margin-bottom:0">Comments / Questions / Suggestions</div>
+            <div class="feedback-rating" id="thumbRow" aria-label="Step feedback"></div>
+          </div>
+          <textarea class="notes" id="notesTa" placeholder="Capture comments, questions, suggestions, missing roles, dependencies, or evidence needed for this step."></textarea>
+        </div>
+      </div>
+      <footer class="stage-footer">
+        <button class="nav-btn" id="prevBtn" aria-label="Previous step">&lt;</button>
+        <button class="nav-btn" id="nextBtn" aria-label="Next step">&gt;</button>
+        <button class="next-btn" id="advanceBtn">Advance the workflow</button>
+        <div class="spacer"></div>
+        <div class="step-caption" id="stepCaption"></div>
+      </footer>
+    </section>
+
+    <aside class="lab">
+      <div class="panel-hd">Review cockpit</div>
+      <div class="phase-review" id="phaseReview"></div>
+      <div class="panel-hd">Walkthrough readiness</div>
+      <div class="score-card">
+        <div class="score-row">
+          <div class="score" id="scoreNum">0</div>
+          <div class="score-copy" id="scoreCopy"></div>
+        </div>
+        <div class="score-bar"><div class="score-fill" id="scoreFill"></div></div>
+      </div>
+      <div class="preset-row" id="presetRow"></div>
+      <div id="levers"></div>
+      <div class="panel-hd" style="margin-top:18px">Issue radar</div>
+      <div class="risk-list" id="riskList"></div>
+    </aside>
+  </main>
+
+  <footer class="timeline">
+    <div class="progress" id="timeline"></div>
+  </footer>
+</div>
+
+<div class="modal" id="modal">
+  <div class="modal-box">
+    <div class="modal-head">
+      <div class="modal-title">Workflow debrief</div>
+      <button class="modal-close" id="modalClose">x</button>
+    </div>
+    <textarea class="debrief" id="debriefText" readonly></textarea>
+    <div class="modal-foot">
+      <button class="copy-btn" id="copyBtn">Copy debrief</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="aboutModal">
+  <div class="modal-box about-box">
+    <div class="modal-head">
+      <div class="modal-title">About this workflow conductor</div>
+      <button class="modal-close" id="aboutClose">x</button>
+    </div>
+    <div class="about-body">
+      <div class="about-intro">
+        This tool is a walkthrough and review surface for the NPG Living Lab workflow. It helps a group test whether an NPG can move from pod realities to one shared network-scale output, while making dependencies, timing, risks, and open questions visible.
+      </div>
+      <div class="about-section">
+        <div class="about-heading">How the system works</div>
+        <div class="about-list">
+          <div class="about-row"><b>Workflow spine:</b> the left rail shows the full cycle across Grounding, Collaborative Building, Shared Output Hub, Integration and Synthesis, and Redesign and Feedback.</div>
+          <div class="about-row"><b>Current step:</b> the center stage explains the active beat, the expected timing, what must be true before it starts, what actions happen, and what should be reviewed before moving on.</div>
+          <div class="about-row"><b>Flow:</b> the before-now-next strip shows where the current beat sits without pretending a missing previous or next step exists.</div>
+          <div class="about-row"><b>Review cockpit:</b> the right panel names the phase entry gate, current job, exit gate, and decision that reviewers should pressure-test.</div>
+          <div class="about-row"><b>Readiness and issue radar:</b> status marks, scenario levers, and risks help reveal where the workflow is credible, fragile, or under-specified.</div>
+        </div>
+      </div>
+      <div class="about-section">
+        <div class="about-heading">How to use it in a review</div>
+        <div class="about-list">
+          <div class="about-row">Move through the workflow one beat at a time. Mark each step as not tested, fragile, or ready.</div>
+          <div class="about-row">Use thumbs up or thumbs down for a quick read, then capture comments, questions, or suggestions when the group finds a dependency, missing role, timing issue, or unclear decision.</div>
+          <div class="about-row">Use the debrief export at the end to carry forward the review record into the next design pass.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="feedbackModal">
+  <div class="modal-box about-box">
+    <div class="modal-head">
+      <div class="modal-title">Send feedback to GitHub</div>
+      <button class="modal-close" id="feedbackClose">x</button>
+    </div>
+    <div class="about-body">
+      <div class="about-intro">
+        This will open a prefilled GitHub Issue for the workflow conductor. The issue includes the current readiness summary, thumb signals, and any comments, questions, or suggestions you entered.
+      </div>
+      <div class="feedback-note">
+        Review the text before submitting on GitHub. Opening the issue draft sends this prefilled text to GitHub in the page URL.
+      </div>
+      <textarea class="feedback-preview" id="feedbackPreview" readonly></textarea>
+    </div>
+    <div class="modal-foot">
+      <button class="secondary-btn" id="feedbackCopy">Copy feedback</button>
+      <button class="copy-btn" id="feedbackOpen">Open GitHub issue</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const FEEDBACK_REPO = "landedimmigrant-ops/npg-workflow-conductor";
+
+const phases = [
+  {id:"grounding",n:"01",name:"Grounding",short:"Grounding",color:"#7a48b8",time:"Weeks 1-12",duration:"~90 days",promise:"Turn pod reality into the architecture for a shared output."},
+  {id:"building",n:"02",name:"Collaborative Building",short:"Building",color:"#673091",time:"Weeks 13-30",duration:"~18 weeks",promise:"Resource different pod contributions to one network-scale thing."},
+  {id:"hub",n:"H",name:"Shared Output Hub",short:"Hub",color:"#5a9d44",time:"All cycle",duration:"Standing check",promise:"Keep attention on the one output the NPG is building together."},
+  {id:"synthesis",n:"03",name:"Integration and Synthesis",short:"Synthesis",color:"#3a9060",time:"Weeks 31-40",duration:"~10 weeks",promise:"Make integration a research discipline, not a final reporting task."},
+  {id:"redesign",n:"04",name:"Redesign and Feedback",short:"Feedback",color:"#9050c8",time:"Weeks 40-48",duration:"~9 weeks",promise:"Return the working output to communities and redesign the next cycle."}
+];
+
+const steps = [
+  {id:"landscape",phase:"grounding",title:"Pod Landscape Mapping",mvp:true,copy:"Start by mapping what is already happening in each contributing pod: methods, data, relationships, capacities, and constraints.",outputs:["Active pod research map","Capacity and relationship inventory","Starting conditions for each contribution"],q:"Do we know what each pod can genuinely bring before asking what the NPG should do?",risk:"If this is thin, the design sprint starts from aspiration rather than capacity."},
+  {id:"question",phase:"grounding",title:"Shared Research Question",mvp:true,copy:"Write the research question from multiple pod vantages so the NPG is held by more than one site or discipline.",outputs:["Shared question","Pod-specific framings","Early alignment language"],q:"Can several pods recognize themselves in the same question?",risk:"If not, alignment may be performative and fragile."},
+  {id:"output",phase:"grounding",title:"NPG Output Definition",mvp:true,copy:"Name the one thing the NPG will build together: an AI system, methodology, infrastructure, policy framework, cultural work, or community of practice.",outputs:["Shared output description","Scope and significance statement","Success criteria for the output"],q:"Is this one thing no pod could build alone?",risk:"If the output is vague, the NPG drifts back to parallel pod projects."},
+  {id:"architecture",phase:"grounding",title:"Contribution Architecture",mvp:true,copy:"Specify how pod contributions fit into the shared output and where integration will happen.",outputs:["Contribution map","Dependencies between pods","Integration rhythm"],q:"Can we explain how each contribution changes the shared output?",risk:"Without this, integration becomes a personality burden."},
+  {id:"modes",phase:"grounding",title:"Participation Modes",mvp:true,copy:"Confirm whether each pod is a host, component contributor, methods contributor, synthesis partner, beneficiary, or some combination.",outputs:["Mode agreement","Resourcing assumptions","What is fixed and modifiable"],q:"Does every pod have a credible way to participate?",risk:"Without modes, lower-capacity pods can quietly disappear."},
+  {id:"frame",phase:"grounding",title:"Learning Frame",mvp:true,copy:"Define what success means, what the NPG expects to learn, and how progress will be judged across cycles.",outputs:["Learning frame","Evaluation signals","Proposal language for Steering"],q:"What will count as a successful first version?",risk:"If this is missing, funders default to conventional milestone reporting."},
+  {id:"site",phase:"building",title:"Site-Based Research and Testing",copy:"Host pods test the shared output where it meets a real community context.",outputs:["Site findings","Community-context evidence","Adaptation needs"],q:"Which sites are testing the output, and what are they allowed to change?",risk:"Site work can become extractive if the pod has no design authority."},
+  {id:"data",phase:"building",title:"Data and Knowledge Assembly",copy:"Component pods assemble datasets, knowledge bases, or source materials through their relationships.",outputs:["Dataset or knowledge base","Governance conditions","Contribution documentation"],q:"Does the shared output need this material, or are we collecting it because we can?",risk:"Data work without a clear output role creates governance load without value."},
+  {id:"technical",phase:"building",title:"Technical Component Development",copy:"Technical pieces are built in relation to the shared output and, where relevant, with AIAI Lab support.",outputs:["Technical component","Interface or standard","Deployment assumptions"],q:"Who maintains the component after the first working version?",risk:"Prototype energy can hide long-term maintenance responsibility."},
+  {id:"methods",phase:"building",title:"Methodology and Framework Development",copy:"Methods contributors shape how the NPG works across pods without needing to host site research.",outputs:["Shared methods","Analytical lens","Documentation for reuse"],q:"Does the method help components integrate, or just describe them?",risk:"Methods can become decorative if they are not used in decisions."},
+  {id:"codesign",phase:"building",title:"Community Engagement and Co-design",copy:"Pods define their own engagement approach while contributing to a shared network-scale output.",outputs:["Co-design records","Validation evidence","Community concerns"],q:"Where does community judgment enter before the output hardens?",risk:"Late feedback turns co-design into consultation after the fact."},
+  {id:"aiai",phase:"building",title:"AIAI Lab Integration",copy:"The Lab acts as connective technical tissue for AI-enabled NPGs: standards, integration, deployment support, and cross-context validation.",outputs:["Technical standards","Integration support","Deployment path"],q:"Is the Lab role formal enough to carry cross-pod technical responsibility?",risk:"If informal, standards and accountability become unclear."},
+  {id:"exchange",phase:"building",title:"Cross-Pod Exchange",mvp:true,copy:"Pods exchange materials, methods, and findings during the cycle, not only at the end.",outputs:["Exchange rhythm","Shared working sessions","Mid-cycle learning"],q:"What has to move between pods while the work is still changeable?",risk:"If exchange waits for synthesis, the NPG becomes five projects meeting occasionally."},
+  {id:"sharedhub",phase:"hub",title:"Shared Output Hub",mvp:true,copy:"This is the center of the workflow: several pods contributing different capacities to one thing that operates at network scale.",outputs:["One shared NPG output","Network-scale value proposition","Focus for investment"],q:"Does every contribution point back to the same object of work?",risk:"The hub is the main safeguard against Phase 1 logic returning under a new name."},
+  {id:"convening",phase:"synthesis",title:"Integration Convening",mvp:true,copy:"Quarterly or biannual gatherings bring contributions together to be tested, challenged, and developed further.",outputs:["Integration decisions","Tension log","Next adjustments"],q:"Is the convening built for integration or just status reporting?",risk:"Status meetings will not create synthesis."},
+  {id:"coordinator",phase:"synthesis",title:"Synthesis Coordinator Role",mvp:true,copy:"A research integrator weaves contributions together and identifies what the shared output is becoming.",outputs:["Named synthesis labour","Integration stewardship","Research memory"],q:"Who is paid and empowered to hold synthesis?",risk:"Without this role, the model fragments at the exact point it needs to cohere."},
+  {id:"memos",phase:"synthesis",title:"Integration Documents and Memos",mvp:true,copy:"Memos capture what is being integrated, what tensions are unresolved, and what decisions were made.",outputs:["Synthesis memos","Decision trail","Material for formal outputs"],q:"Will someone six months later understand why the output changed?",risk:"Without memos, learning disappears into meetings."},
+  {id:"working",phase:"synthesis",title:"Working Output Version",copy:"The first integrated version is not final. It is a working object that can be tested, used, and redesigned.",outputs:["Working version","Deployment assumptions","Evidence of integration"],q:"Can pods and communities react to something concrete?",risk:"If the output never becomes tangible, feedback stays abstract."},
+  {id:"gaps",phase:"synthesis",title:"Gap and Adjustment Analysis",copy:"Identify what is working, what is missing, and which contributions should continue, deepen, close, or be replaced.",outputs:["Gap analysis","Adjustment decisions","Contribution changes"],q:"Can the model openly hold failed or replaced contributions?",risk:"If failure is hidden, the next cycle repeats avoidable mistakes."},
+  {id:"formal",phase:"synthesis",title:"First-Draft Formal Outputs",copy:"Publications, policy papers, workshops, and technical documentation emerge from the shared output and integration work.",outputs:["Draft papers","Policy or technical documentation","Workshop material"],q:"Are formal outputs being generated from integration rather than bolted on?",risk:"Formal outputs can distract from the shared output if they become the real goal."},
+  {id:"feedback",phase:"redesign",title:"Community Feedback Loop",mvp:true,copy:"Each pod brings the working output back to the communities it works with, and those responses shape the next round.",outputs:["Community responses","Consent and concern signals","Adaptation priorities"],q:"What would make communities say this output is not ready?",risk:"If feedback is symbolic, the living lab becomes a deployment exercise."},
+  {id:"reshape",phase:"redesign",title:"Contribution Reshaping",copy:"Pods adjust, deepen, close, or open contributions based on synthesis and community response.",outputs:["Revised contribution shapes","Changed resourcing needs","Next-cycle commitments"],q:"What should stop, start, or change before the next cycle?",risk:"A cycle that cannot reshape is not really iterative."},
+  {id:"updated",phase:"redesign",title:"Updated Output Version",copy:"The shared output evolves through use, feedback, and redesign.",outputs:["Updated version","New validation needs","Evidence of learning"],q:"Can we show how the output changed because of the cycle?",risk:"If changes are invisible, funders and communities cannot see learning."},
+  {id:"public",phase:"redesign",title:"Public-Facing Artefact",copy:"Create something short and shareable for communities, funders, and the broader network.",outputs:["Accessible update","Community-facing material","Funders oriented to progress"],q:"Can people outside the project understand what was built and learned?",risk:"Without a public artefact, the work may feel opaque until final reporting."},
+  {id:"nextcycle",phase:"redesign",title:"Next Cycle Architecture",mvp:true,copy:"The NPG resets the architecture for the next cycle with accumulated learning embedded.",outputs:["Next-cycle plan","Updated integration architecture","Cycle transition decisions"],q:"Does the next cycle actually reflect what was learned?",risk:"If not, the cycle is a loop in name only."}
+];
+
+const timePlan = {
+  landscape:{window:"Weeks 1-3",estimate:"2-3 weeks",cadence:"Front-loaded mapping",note:"Use existing dashboard/project data first, then fill gaps through pod conversations."},
+  question:{window:"Weeks 3-4",estimate:"1-2 weeks",cadence:"2-3 drafting sessions",note:"Can overlap with late landscape mapping once major pod realities are visible."},
+  output:{window:"Weeks 4-6",estimate:"1-2 weeks",cadence:"Decision sprint",note:"Needs enough specificity to govern budget, roles, and integration."},
+  architecture:{window:"Weeks 5-8",estimate:"2-3 weeks",cadence:"Design and dependency mapping",note:"Often overlaps output definition; this is where feasibility pressure becomes visible."},
+  modes:{window:"Weeks 7-9",estimate:"~1 week",cadence:"Role confirmation",note:"Short if capacity is known; longer if resourcing or authority is contested."},
+  frame:{window:"Weeks 9-12",estimate:"2-3 weeks",cadence:"Proposal and evaluation drafting",note:"Closes the 90-day grounding phase and becomes the basis for Steering review."},
+  site:{window:"Weeks 13-28",estimate:"8-12 weeks",cadence:"Parallel pod work",note:"Host sites need enough time for local rhythm, consent, and adaptation."},
+  data:{window:"Weeks 13-26",estimate:"6-10 weeks",cadence:"Parallel assembly",note:"Governance and provenance can take as much time as the technical preparation."},
+  technical:{window:"Weeks 15-30",estimate:"8-12 weeks",cadence:"Build-test-integrate",note:"Should not wait until the end to meet Lab standards."},
+  methods:{window:"Weeks 13-24",estimate:"4-8 weeks",cadence:"Methods applied during work",note:"The method has to shape decisions while components are still moving."},
+  codesign:{window:"Weeks 15-30",estimate:"6-10 weeks",cadence:"Pod-defined engagement",note:"Early enough to change the work, not only validate it."},
+  aiai:{window:"Weeks 13-30",estimate:"Standing support",cadence:"Weekly or biweekly technical touchpoints",note:"Formalize the Lab role before integration pressure peaks."},
+  exchange:{window:"Weeks 13-30",estimate:"Every 3-4 weeks",cadence:"Recurring cross-pod sessions",note:"Exchange is a rhythm across the whole build phase, not a single event."},
+  sharedhub:{window:"All cycle; formal checks at Weeks 12, 30, 40",estimate:"30-60 min per check",cadence:"Standing alignment checkpoint",note:"Use it whenever the work starts sounding like separate pod projects."},
+  convening:{window:"Weeks 31-32",estimate:"1-2 weeks prep plus convening",cadence:"Quarterly or cycle-end integration",note:"This meeting should make decisions, not only collect updates."},
+  coordinator:{window:"Named by Week 12; active Weeks 13-48",estimate:"0.2-0.5 FTE",cadence:"Continuous synthesis labour",note:"The role starts early so synthesis has memory before integration begins."},
+  memos:{window:"Weeks 31-36",estimate:"1-2 weeks after each convening",cadence:"Decision trail",note:"Fast memo cycles preserve what changed before the room memory fades."},
+  working:{window:"Weeks 33-38",estimate:"3-6 weeks",cadence:"Assembly and testable versioning",note:"A working version should exist early enough for real feedback."},
+  gaps:{window:"Weeks 37-40",estimate:"1-2 weeks",cadence:"Analysis and adjustment decisions",note:"This is where the model needs permission to close or replace weak contributions."},
+  formal:{window:"Weeks 38-42",estimate:"2-4 weeks",cadence:"Draft from synthesis",note:"Formal outputs should come from the integrated work, not compete with it."},
+  feedback:{window:"Weeks 40-44",estimate:"3-5 weeks",cadence:"Pod-led community return",note:"Communities need something concrete enough to judge and enough time to respond."},
+  reshape:{window:"Weeks 44-46",estimate:"1-2 weeks",cadence:"Revision decisions",note:"Translate feedback into changed commitments, not only a response memo."},
+  updated:{window:"Weeks 45-47",estimate:"1-2 weeks",cadence:"Version update",note:"Make the evidence of learning visible in the output itself."},
+  public:{window:"Weeks 46-48",estimate:"1-2 weeks",cadence:"Plain-language artifact",note:"Short, shareable, and careful about what is not ready for public circulation."},
+  nextcycle:{window:"Weeks 47-48",estimate:"1-2 weeks",cadence:"Cycle reset",note:"Locks the next cycle around what was learned, changed, and still needs testing."}
+};
+
+const phaseReviews = {
+  grounding:{
+    entry:"A stream has been selected, a provisional pod cast exists, and there is time before proposal lock-in.",
+    now:"Turn existing pod reality into a shared-output architecture.",
+    exit:"The proposal can name one shared output, pod contribution modes, integration rhythm, and the learning frame.",
+    decision:"Can Steering approve this as one network-scale build rather than a collection of pod projects?"
+  },
+  building:{
+    entry:"Grounding has fixed the shared output, contribution architecture, modes, and first-cycle success criteria.",
+    now:"Resource pod contributions and make exchange happen while the work can still change.",
+    exit:"Components, site evidence, methods, data, and technical supports are mature enough to integrate.",
+    decision:"Is each contribution visibly changing the same shared output?"
+  },
+  hub:{
+    entry:"The NPG has multiple contributions in motion and needs a single object of attention.",
+    now:"Recenter the conversation on what is being built together.",
+    exit:"Every contribution has a clear route into the shared output and the investment case is legible.",
+    decision:"Does the work still require the whole network, or has it split into parallel pod activity?"
+  },
+  synthesis:{
+    entry:"Contributions are tangible enough to compare, combine, challenge, and document.",
+    now:"Integrate the parts, preserve the decision trail, and turn tensions into research learning.",
+    exit:"There is a working version, synthesis memory, gap analysis, and first formal outputs.",
+    decision:"Is synthesis funded and empowered as research labour, not meeting administration?"
+  },
+  redesign:{
+    entry:"A working version exists and communities can respond to something concrete.",
+    now:"Bring the output back to communities, reshape contributions, and re-architect the next cycle.",
+    exit:"The next cycle reflects feedback, changed contribution needs, and visible learning.",
+    decision:"Did community response actually alter the next version?"
+  }
+};
+
+const walkthrough = {
+  landscape:{
+    deps:["Provisional NPG stream and participating pods","Existing project registry, pod interviews, or dashboard data","Permission to name capacity and community constraints"],
+    actions:["Collect pod snapshots: work underway, methods, data, relationships, constraints","Map which capacities could feed the shared output","Separate modifiable choices from community-fixed conditions"],
+    handoff:["Feeds the shared question and contribution architecture","Creates evidence for why each pod is in the NPG"],
+    review:["Which pod realities are missing or misread?","Where are we assuming capacity that has not been confirmed?"]
+  },
+  question:{
+    deps:["Landscape map from participating pods","At least two pod vantages on the stream","A facilitator able to hold alignment without flattening difference"],
+    actions:["Draft the shared question in plain language","Rewrite it from each pod vantage","Identify language that pods cannot accept"],
+    handoff:["Guides output definition and learning frame","Sets the boundary for what belongs in the NPG"],
+    review:["Can several pods recognize themselves in the same question?","What would make the question too broad to govern decisions?"]
+  },
+  output:{
+    deps:["Shared question has enough agreement to focus the work","Pod capacities are visible","Steering and funder expectations are known"],
+    actions:["Name the one thing the NPG is building","State why no single pod could build it alone","Define the first viable version and what later versions might become"],
+    handoff:["Becomes the hub for all contribution decisions","Prevents the project from becoming a portfolio of unrelated work"],
+    review:["Is this a single shared output or a bundle of outputs?","What would count as a first version by the end of Cycle 1?"]
+  },
+  architecture:{
+    deps:["Shared output is specific enough to decompose","Pods have named capacities and constraints","AIAI Lab and synthesis roles are at least provisionally defined"],
+    actions:["Map each contribution to the part of the output it changes","Name dependencies between pods, Lab, synthesis, and governance","Set the integration cadence and decision points"],
+    handoff:["Gives building teams their route into the shared output","Feeds resourcing, scheduling, and risk review"],
+    review:["Where could a contribution proceed without touching the shared output?","What dependency has no owner yet?"]
+  },
+  modes:{
+    deps:["Contribution architecture is visible","Pod capacity and appetite have been discussed","Resourcing assumptions are open"],
+    actions:["Assign host, component, methods, synthesis, or beneficiary modes","Allow pods to hold more than one mode where credible","Record what each pod can modify locally"],
+    handoff:["Turns participation into budget and workload commitments","Keeps lower-capacity pods meaningfully connected"],
+    review:["Does every pod have a credible role?","Are modes descriptive of real work, not status labels?"]
+  },
+  frame:{
+    deps:["Shared output, contribution architecture, and pod modes are drafted","Steering needs proposal language","Evaluation expectations are known"],
+    actions:["Define success for the first working version","Name learning signals for each cycle","Write how progress will be reported as output evolution"],
+    handoff:["Becomes the proposal logic and review basis","Sets what status reporting should track"],
+    review:["Will funders understand why early months may look quiet?","Can the frame judge integration rather than only activity?"]
+  },
+  site:{
+    deps:["Host pods have authority to test in context","Community relationships and consent conditions are clear","The shared output has a testable site dimension"],
+    actions:["Plan site work around the shared output","Document adaptation needs and local constraints","Feed site evidence into exchange and synthesis"],
+    handoff:["Supplies context evidence for integration","Signals what the output must respect in use"],
+    review:["What can the host pod change locally?","What would make site testing extractive or premature?"]
+  },
+  data:{
+    deps:["The output needs specific material to work","Data governance conditions are named","Custodianship and access are settled enough to proceed"],
+    actions:["Assemble the dataset, knowledge base, or source material","Document provenance, restrictions, and reuse conditions","Confirm how the material will connect to the output"],
+    handoff:["Feeds technical development, methods, and integration memos","Creates governance obligations for later cycles"],
+    review:["Are we collecting because the output needs it?","Who carries maintenance and access decisions after the first version?"]
+  },
+  technical:{
+    deps:["Technical component has a defined role in the shared output","AIAI Lab standards and support are available","Maintenance assumptions are explicit"],
+    actions:["Build the component against the shared architecture","Test interface, interoperability, and deployment assumptions","Document what others need to integrate it"],
+    handoff:["Moves to Lab integration and working-output assembly","Creates standards for future components"],
+    review:["Who owns maintenance after prototype energy fades?","What standard or interface is still missing?"]
+  },
+  methods:{
+    deps:["The NPG needs a method across more than one contribution","Methods lead has enough access to real work","Decision points where the method matters are known"],
+    actions:["Define the method or analytical lens","Apply it to contribution design and integration choices","Create reusable documentation"],
+    handoff:["Shapes synthesis memos and cross-pod interpretation","Helps keep contributions comparable without forcing sameness"],
+    review:["Does the method change decisions or only describe them?","Which pod practices must remain locally defined?"]
+  },
+  codesign:{
+    deps:["Pods know where community judgment belongs","Engagement approach is pod-defined","The output is still changeable"],
+    actions:["Run co-design or validation through pod relationships","Capture concerns, consent signals, and desired adaptations","Feed community response into current-cycle decisions"],
+    handoff:["Feeds site testing, gap analysis, and redesign","Prevents feedback from arriving only after the output hardens"],
+    review:["Where does community judgment enter before lock-in?","What response would make us pause or change course?"]
+  },
+  aiai:{
+    deps:["AI or technical infrastructure is part of the shared output","Contribution interfaces and standards are known","Lab labour and authority are resourced"],
+    actions:["Set technical standards and integration supports","Review components for interoperability and deployment risk","Support cross-context validation"],
+    handoff:["Connects technical work to the shared output hub","Feeds working-output version and maintenance planning"],
+    review:["Is the Lab role formal enough to carry accountability?","What remains informal but mission-critical?"]
+  },
+  exchange:{
+    deps:["Pods have something to exchange before final synthesis","Exchange rhythm is scheduled","Materials can move under governance conditions"],
+    actions:["Run working sessions while contributions are still changeable","Move methods, findings, and tensions between pods","Record what changed because of exchange"],
+    handoff:["Prepares integration convenings with live material","Keeps building from becoming separate pod work"],
+    review:["What has to move now, not at the end?","Which pod-to-pod dependency is being avoided?"]
+  },
+  sharedhub:{
+    deps:["A shared output exists and contributions are underway","Architecture shows routes into the output","Investment logic is still visible"],
+    actions:["Recheck that every contribution points to the same object","Name the network-scale value of the output","Identify drift back toward parallel projects"],
+    handoff:["Centers synthesis and funder communication","Gives the walkthrough its main persuasive claim"],
+    review:["Does every contribution change the same thing?","Would the output be weaker or impossible without multiple pods?"]
+  },
+  convening:{
+    deps:["Contributions have enough substance to integrate","Tensions and open decisions are known","Synthesis coordinator has material to work with"],
+    actions:["Bring components, site findings, methods, and technical work into one room","Make integration decisions, not status updates","Log tensions and next adjustments"],
+    handoff:["Feeds synthesis memos and working-output assembly","Converts distributed activity into shared research direction"],
+    review:["Is this convening designed for integration?","What decision has to be made before people leave?"]
+  },
+  coordinator:{
+    deps:["Integration labour is recognized as a core role","Budget and authority can support the role","Pods accept a weaving function"],
+    actions:["Name the person or team holding synthesis","Give them access to pod material and decision spaces","Clarify authority to flag drift, gaps, and contradictions"],
+    handoff:["Holds research memory across cycles","Makes integration less dependent on whoever is loudest or most available"],
+    review:["Who is paid and empowered to hold synthesis?","What can this role decide, and what must go back to pods?"]
+  },
+  memos:{
+    deps:["Convenings and exchanges generate decisions and tensions","A synthesis owner exists","There is a format people will actually use"],
+    actions:["Write what was integrated and why","Record unresolved tensions and changed assumptions","Link decisions to evidence and pod contributions"],
+    handoff:["Feeds formal outputs, working versions, and next-cycle architecture","Preserves learning beyond meetings"],
+    review:["Could someone understand this decision six months later?","What is undocumented because it felt obvious in the room?"]
+  },
+  working:{
+    deps:["Enough components can be assembled","Integration decisions are documented","Testing and feedback routes are ready"],
+    actions:["Create the first integrated working version","Make deployment assumptions explicit","Prepare something communities and pods can react to"],
+    handoff:["Moves the NPG from abstract alignment to testable object","Triggers gap analysis and community feedback"],
+    review:["Can people react to something concrete?","What part is still missing before feedback would be meaningful?"]
+  },
+  gaps:{
+    deps:["A working version and synthesis memos exist","Pods can be honest about what is not working","Resourcing can change if needed"],
+    actions:["Identify gaps, failures, tensions, and duplicated work","Decide what continues, deepens, closes, or changes","Name new dependencies for the next version"],
+    handoff:["Feeds contribution reshaping and next-cycle architecture","Prevents quiet failure from repeating"],
+    review:["Can the model hold failed contributions without blame?","Which gap is structural, not just a task delay?"]
+  },
+  formal:{
+    deps:["Integration has generated knowledge worth sharing","Decision trail and evidence are available","Formal outputs do not replace the shared output"],
+    actions:["Draft papers, policy notes, workshops, or technical documentation from synthesis","Connect formal outputs to the working object","Identify audiences and review needs"],
+    handoff:["Turns integration learning into network deliverables","Supports funder and public accountability"],
+    review:["Are outputs generated from integration?","What formal product would distort the work if prioritized too early?"]
+  },
+  feedback:{
+    deps:["Working output is concrete enough to review","Pods have community engagement routes","Consent, concern, and adaptation signals can be recorded"],
+    actions:["Bring the working output back through pod relationships","Capture what communities accept, reject, or want changed","Identify non-negotiables for the next cycle"],
+    handoff:["Feeds contribution reshaping and updated-output version","Keeps the living lab inside real relationships"],
+    review:["What would make communities say this is not ready?","Did feedback have power to change the output?"]
+  },
+  reshape:{
+    deps:["Community feedback and gap analysis are available","Pods can adjust workplans and resourcing","NPG-level architecture can change"],
+    actions:["Revise contribution shapes and commitments","Close or replace work that no longer serves the output","Update budget and workload implications"],
+    handoff:["Feeds updated output and next-cycle architecture","Shows iteration is real rather than symbolic"],
+    review:["What should stop, start, or change?","Which pod needs different resourcing for the next cycle?"]
+  },
+  updated:{
+    deps:["Reshaped contributions are agreed","Feedback has been interpreted","Technical and governance changes are known"],
+    actions:["Produce the updated version of the shared output","Document what changed and why","Name new validation needs"],
+    handoff:["Feeds public-facing artefact and next-cycle planning","Makes learning visible to pods, Steering, and funders"],
+    review:["Can we show how feedback changed the output?","What changed in substance, not only presentation?"]
+  },
+  public:{
+    deps:["Updated output and learning story are stable enough to share","Audience and permissions are clear","Plain-language framing is available"],
+    actions:["Create a short community, funder, or network-facing artefact","Show what was built, learned, and changed","Keep sensitive details out of public circulation"],
+    handoff:["Supports accountability and confidence before the next cycle","Gives collaborators a shareable story of progress"],
+    review:["Can people outside the project understand the work?","What should not be public yet?"]
+  },
+  nextcycle:{
+    deps:["Feedback, gap analysis, updated output, and resourcing implications are available","Steering or governance review can absorb changes","Cycle timing is realistic"],
+    actions:["Reset the architecture for the next cycle","Update contribution modes, integration rhythm, and success signals","Carry forward only the work that serves the shared output"],
+    handoff:["Starts the next grounding/building loop with accumulated learning","Creates a review point for whether to continue, scale, or close"],
+    review:["Does the next cycle actually reflect what was learned?","What assumption must be tested first next time?"]
+  }
+};
+
+const iconByStep = {
+  landscape:"map",question:"question",output:"target",architecture:"structure",modes:"roles",frame:"frame",
+  site:"site",data:"database",technical:"chip",methods:"compass",codesign:"dialogue",aiai:"lab",exchange:"exchange",
+  sharedhub:"hub",convening:"circle",coordinator:"weave",memos:"memo",working:"prototype",gaps:"search",formal:"document",
+  feedback:"feedback",reshape:"reshape",updated:"version",public:"broadcast",nextcycle:"cycle"
+};
+
+const iconPaths = {
+  map:'<path d="M5 8l5-2 4 2 5-2v14l-5 2-4-2-5 2V8z"/><path d="M10 6v14M14 8v14"/>',
+  question:'<path d="M9 9a5 5 0 0 1 9 3c0 4-5 4-5 7"/><path d="M13 23h.1"/><path d="M4 12a9 9 0 0 1 4-7"/>',
+  target:'<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="M12 2v4M22 12h-4M12 22v-4M2 12h4"/>',
+  structure:'<rect x="4" y="4" width="6" height="6" rx="1.5"/><rect x="14" y="4" width="6" height="6" rx="1.5"/><rect x="9" y="14" width="6" height="6" rx="1.5"/><path d="M10 7h4M12 10v4"/>',
+  roles:'<circle cx="8" cy="8" r="3"/><circle cx="16" cy="8" r="3"/><path d="M4 20a4 4 0 0 1 8 0M12 20a4 4 0 0 1 8 0"/>',
+  frame:'<path d="M5 5h14v14H5z"/><path d="M8 9h8M8 13h5M8 17h8"/>',
+  site:'<path d="M12 22s7-6 7-12a7 7 0 0 0-14 0c0 6 7 12 7 12z"/><circle cx="12" cy="10" r="2.5"/>',
+  database:'<ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v12c0 1.7 3.1 3 7 3s7-1.3 7-3V6"/><path d="M5 12c0 1.7 3.1 3 7 3s7-1.3 7-3"/>',
+  chip:'<rect x="7" y="7" width="10" height="10" rx="2"/><path d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4"/><path d="M10 12h4"/>',
+  compass:'<circle cx="12" cy="12" r="8"/><path d="M15 9l-2 6-6 2 2-6 6-2z"/>',
+  dialogue:'<path d="M5 6h10a3 3 0 0 1 3 3v4a3 3 0 0 1-3 3H9l-4 4v-4a3 3 0 0 1-3-3V9a3 3 0 0 1 3-3z"/><path d="M8 10h7M8 13h5"/>',
+  lab:'<path d="M9 3h6"/><path d="M10 3v6l-5 9a3 3 0 0 0 2.6 4h8.8a3 3 0 0 0 2.6-4l-5-9V3"/><path d="M8 16h8"/>',
+  exchange:'<path d="M4 8h14l-3-3"/><path d="M20 16H6l3 3"/><path d="M18 8l-3 3M6 16l3-3"/>',
+  hub:'<circle cx="12" cy="12" r="4"/><circle cx="4" cy="12" r="2"/><circle cx="20" cy="12" r="2"/><circle cx="12" cy="4" r="2"/><circle cx="12" cy="20" r="2"/><path d="M6 12h2M16 12h2M12 6v2M12 16v2"/>',
+  circle:'<circle cx="12" cy="12" r="8"/><path d="M8 12h8M12 8v8"/>',
+  weave:'<path d="M4 8c4-4 12 12 16 8"/><path d="M4 16c4 4 12-12 16-8"/><path d="M8 4v16M16 4v16"/>',
+  memo:'<path d="M7 3h8l4 4v14H7z"/><path d="M15 3v5h5M10 12h7M10 16h7"/>',
+  prototype:'<rect x="4" y="5" width="16" height="12" rx="2"/><path d="M8 21h8M12 17v4M8 9h8M8 13h5"/>',
+  search:'<circle cx="10" cy="10" r="6"/><path d="M15 15l5 5M8 10h4"/>',
+  document:'<path d="M6 3h9l3 3v15H6z"/><path d="M15 3v4h4M9 11h6M9 15h6M9 19h4"/>',
+  feedback:'<path d="M5 7h11a3 3 0 0 1 3 3v3a3 3 0 0 1-3 3h-4l-5 4v-4H5a3 3 0 0 1-3-3v-3a3 3 0 0 1 3-3z"/><path d="M8 11h6"/>',
+  reshape:'<path d="M5 12a7 7 0 0 1 12-5l2 2"/><path d="M19 4v5h-5"/><path d="M19 12a7 7 0 0 1-12 5l-2-2"/><path d="M5 20v-5h5"/>',
+  version:'<path d="M5 5h14v14H5z"/><path d="M8 8h8v5H8zM8 16h4"/>',
+  broadcast:'<path d="M5 14h3l8 4V6l-8 4H5z"/><path d="M18 9a4 4 0 0 1 0 6M20 6a8 8 0 0 1 0 12"/>',
+  cycle:'<path d="M7 7a8 8 0 0 1 11 1l2 2"/><path d="M20 5v5h-5"/><path d="M17 17a8 8 0 0 1-11-1l-2-2"/><path d="M4 19v-5h5"/>',
+  thumbUp:'<path d="M7 10v10H4a2 2 0 0 1-2-2v-6a2 2 0 0 1 2-2h3z"/><path d="M7 10l4-7c.7-1.2 2.5-.7 2.5.7V8h5a2 2 0 0 1 2 2.3l-1.2 7.5a3 3 0 0 1-3 2.5H7V10z"/>',
+  thumbDown:'<path d="M7 14V4H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h3z"/><path d="M7 14l4 7c.7 1.2 2.5.7 2.5-.7V16h5a2 2 0 0 0 2-2.3L19.3 6.2a3 3 0 0 0-3-2.5H7V14z"/>'
+};
+
+function iconMarkup(stepOrId, cls="mini-icon") {
+  const id = typeof stepOrId === "string" ? stepOrId : stepOrId.id;
+  const name = iconByStep[id] || "target";
+  const svg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + iconPaths[name] + '</svg>';
+  return cls ? '<span class="' + cls + '" aria-hidden="true">' + svg + '</span>' : svg;
+}
+
+function rawIcon(name) {
+  return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + iconPaths[name] + '</svg>';
+}
+
+const leverDefs = [
+  {id:"grounding",name:"Grounding depth",risk:"Grounding is too thin",body:"The NPG may design from aspiration rather than pod reality."},
+  {id:"output",name:"Output clarity",risk:"Shared output is blurry",body:"The project can split into parallel pod prototypes."},
+  {id:"synthesis",name:"Synthesis capacity",risk:"Synthesis is underpowered",body:"Integration becomes invisible labour or a final report task."},
+  {id:"feedback",name:"Community feedback strength",risk:"Feedback is too late",body:"Communities may only see the output after it has hardened."},
+  {id:"aiai",name:"AIAI Lab role",risk:"Technical integration is informal",body:"Standards, maintenance, and deployment accountability stay unclear."},
+  {id:"capacity",name:"Coordination capacity",risk:"Coordination load is too high",body:"The model may be right but operationally exhausting."}
+];
+
+const presets = {
+  mvp:{label:"MVP test",levers:{grounding:76,output:72,synthesis:68,feedback:64,aiai:52,capacity:60}},
+  ai:{label:"AI-heavy",levers:{grounding:68,output:74,synthesis:63,feedback:54,aiai:84,capacity:48}},
+  strain:{label:"Capacity strain",levers:{grounding:50,output:58,synthesis:42,feedback:46,aiai:58,capacity:28}}
+};
+
+const critical = steps.filter(s => s.mvp).map(s => s.id);
+const S = {
+  idx:0,
+  playing:false,
+  preset:"mvp",
+  levers:{...presets.mvp.levers},
+  status:Object.fromEntries(steps.map(s => [s.id,"unknown"])),
+  notes:Object.fromEntries(steps.map(s => [s.id,""])),
+  thumbs:Object.fromEntries(steps.map(s => [s.id,""]))
+};
+
+critical.slice(0,6).forEach(id => S.status[id] = "fragile");
+
+function phaseFor(id){return phases.find(p => p.id === id)}
+function stepPhase(step){return phaseFor(step.phase)}
+function clamp(n,min,max){return Math.max(min,Math.min(max,n))}
+function statusScore(st){return st === "ready" ? 1 : st === "fragile" ? .45 : 0}
+function listMarkup(items){return items.map(item => '<div class="walk-item">' + item + '</div>').join("")}
+
+function renderTiming(step){
+  const t = timePlan[step.id];
+  const ph = stepPhase(step);
+  document.getElementById("timeStrip").innerHTML =
+    '<div class="time-chip"><div class="time-label">Cycle window</div><div class="time-value">' + t.window + '</div><div class="time-note">' + ph.time + ' phase reference</div></div>' +
+    '<div class="time-chip"><div class="time-label">Typical effort</div><div class="time-value">' + t.estimate + '</div><div class="time-note">' + t.cadence + '</div></div>' +
+    '<div class="time-chip"><div class="time-label">Timing watchpoint</div><div class="time-value">' + t.note + '</div></div>';
+}
+
+function renderWalk(step){
+  const w = walkthrough[step.id];
+  document.getElementById("walkDeck").innerHTML =
+    '<div class="walk-card"><div class="walk-card-label">Start when</div><div class="walk-list">' + listMarkup(w.deps) + '</div></div>' +
+    '<div class="walk-card"><div class="walk-card-label">Actions required</div><div class="walk-list">' + listMarkup(w.actions) + '</div></div>' +
+    '<div class="walk-card"><div class="walk-card-label">Handoff / dependency</div><div class="walk-list">' + listMarkup(w.handoff) + '</div></div>' +
+    '<div class="walk-card"><div class="walk-card-label">Review before advancing</div><div class="walk-list">' + listMarkup(w.review) + '</div></div>';
+}
+
+function renderPhaseReview(){
+  const step = steps[S.idx];
+  const ph = stepPhase(step);
+  const r = phaseReviews[ph.id];
+  const t = timePlan[step.id];
+  const phaseSteps = steps.filter(s => s.phase === ph.id);
+  const ready = phaseSteps.filter(s => S.status[s.id] === "ready").length;
+  const fragile = phaseSteps.filter(s => S.status[s.id] === "fragile").length;
+  document.getElementById("phaseReview").style.setProperty("--phase",ph.color);
+  document.getElementById("phaseReview").innerHTML =
+    '<div class="phase-review-title">' + ph.name + '</div>' +
+    '<div class="phase-review-copy">' + ph.promise + '</div>' +
+    '<div class="dependency-strip">' +
+      '<span class="dependency-chip">' + phaseSteps.length + ' steps</span>' +
+      '<span class="dependency-chip">' + ready + ' ready</span>' +
+      '<span class="dependency-chip">' + fragile + ' fragile</span>' +
+    '</div>' +
+    '<div class="phase-time">' +
+      '<div class="phase-time-box"><div class="phase-time-num">' + ph.time + '</div><div class="phase-time-cap">' + ph.duration + '</div></div>' +
+      '<div class="phase-time-box"><div class="phase-time-num">' + t.window + '</div><div class="phase-time-cap">Current step</div></div>' +
+    '</div>' +
+    '<div class="phase-gate"><div class="phase-gate-label">Entry gate</div><div class="phase-gate-text">' + r.entry + '</div></div>' +
+    '<div class="phase-gate"><div class="phase-gate-label">Current job</div><div class="phase-gate-text">' + r.now + '</div></div>' +
+    '<div class="phase-gate"><div class="phase-gate-label">Exit gate</div><div class="phase-gate-text">' + r.exit + '</div></div>' +
+    '<div class="phase-gate"><div class="phase-gate-label">Review decision</div><div class="phase-gate-text">' + r.decision + '</div></div>';
+}
+
+function diagnostics(){
+  const leverAvg = leverDefs.reduce((sum,l) => sum + S.levers[l.id],0) / leverDefs.length;
+  const critAvg = critical.reduce((sum,id) => sum + statusScore(S.status[id]),0) / critical.length;
+  const readyCount = critical.filter(id => S.status[id] === "ready").length;
+  const fragileCount = critical.filter(id => S.status[id] === "fragile").length;
+  const risks = [];
+  leverDefs.forEach(l => {
+    if (S.levers[l.id] < 42) risks.push({level:"high",title:l.risk,body:l.body});
+    else if (S.levers[l.id] < 60) risks.push({level:"med",title:l.risk,body:l.body});
+  });
+  if (S.status.output !== "ready") risks.push({level:"high",title:"Shared output is not locked",body:"This is the main distinction between a network-scale NPG and separate pod work."});
+  if (S.status.architecture === "unknown") risks.push({level:"high",title:"Contribution architecture is unresolved",body:"Pods need to know how their work becomes one shared thing."});
+  if (S.status.coordinator !== "ready") risks.push({level:"high",title:"Synthesis role is not secured",body:"The workflow needs named research integration labour."});
+  if (S.status.feedback === "unknown" && S.idx > steps.findIndex(s => s.id === "working")) risks.push({level:"med",title:"Community feedback is not yet operational",body:"The working version should return to communities before the next cycle is locked."});
+  const noteCount = Object.values(S.notes).filter(v => v.trim()).length;
+  const mvpNoteCount = critical.filter(id => S.notes[id].trim()).length;
+  const thumbUpCount = Object.values(S.thumbs).filter(v => v === "up").length;
+  const thumbDownCount = Object.values(S.thumbs).filter(v => v === "down").length;
+  const score = clamp(Math.round(16 + leverAvg * .48 + critAvg * 42 + mvpNoteCount * 1.2 - risks.filter(r => r.level === "high").length * 7 - risks.filter(r => r.level === "med").length * 3),0,100);
+  return {score,risks:risks.slice(0,7),readyCount,fragileCount,noteCount,mvpNoteCount,thumbUpCount,thumbDownCount};
+}
+
+function render(){
+  const step = steps[S.idx];
+  const ph = stepPhase(step);
+  document.documentElement.style.setProperty("--phase",ph.color);
+  document.getElementById("phasePill").textContent = ph.n + " - " + ph.short + " / " + ph.time;
+  document.getElementById("stepEye").innerHTML = "Beat " + (S.idx + 1) + " / " + steps.length + " - " + ph.name + (step.mvp ? '<span class="mvp-tag">MVP path</span>' : "");
+  document.getElementById("stepIcon").innerHTML = iconMarkup(step,"");
+  document.getElementById("stepTitle").textContent = step.title;
+  document.getElementById("stepCopy").textContent = step.copy;
+  renderTiming(step);
+  renderWalk(step);
+  document.getElementById("artifactList").innerHTML = step.outputs.map(o => '<div class="artifact-row">' + o + '</div>').join("");
+  document.getElementById("questionText").textContent = step.q;
+  document.getElementById("riskText").innerHTML = "<b>Failure mode:</b> " + step.risk;
+  document.getElementById("notesTa").value = S.notes[step.id] || "";
+  document.getElementById("stepCaption").textContent = step.title + " - " + ph.name;
+  document.getElementById("prevBtn").disabled = S.idx === 0;
+  document.getElementById("nextBtn").disabled = S.idx === steps.length - 1;
+  renderStatus(step);
+  renderMap();
+  renderRail();
+  renderPhaseReview();
+  renderLab();
+  renderTimeline();
+  renderPlay();
+  renderThumbs(step);
+}
+
+function renderStatus(step){
+  const labels = {unknown:"Not tested",fragile:"Fragile",ready:"Ready"};
+  document.getElementById("statusRow").innerHTML = Object.keys(labels).map(st =>
+    '<button class="status-btn ' + (S.status[step.id] === st ? "on" : "") + '" data-status="' + st + '">' + labels[st] + '</button>'
+  ).join("");
+}
+
+function renderThumbs(step){
+  const current = S.thumbs[step.id] || "";
+  document.getElementById("thumbRow").innerHTML =
+    '<button class="thumb-btn ' + (current === "up" ? "on" : "") + '" data-thumb="up" aria-label="Thumbs up">' + rawIcon("thumbUp") + '</button>' +
+    '<button class="thumb-btn ' + (current === "down" ? "on" : "") + '" data-thumb="down" aria-label="Thumbs down">' + rawIcon("thumbDown") + '</button>';
+}
+
+function renderMap(){
+  const prev = S.idx > 0 ? steps[S.idx - 1] : null;
+  const cur = steps[S.idx];
+  const next = S.idx < steps.length - 1 ? steps[S.idx + 1] : null;
+  const card = (label,s,cls="") => s
+    ? '<div class="map-node ' + cls + '">' + iconMarkup(s) + '<div class="map-label">' + label + '</div><div class="map-title">' + s.title + '</div></div>'
+    : '<div class="map-node empty" aria-hidden="true"></div>';
+  document.getElementById("focusMap").innerHTML = card("Before",prev) + '<div class="map-arrow">-&gt;</div>' + card("Now",cur,"current") + '<div class="map-arrow">-&gt;</div>' + card("Next",next);
+}
+
+function renderRail(){
+  document.getElementById("phaseRail").innerHTML = phases.filter(p => p.id !== "hub").map(p => {
+    const phaseSteps = steps.filter(s => s.phase === p.id);
+    const done = phaseSteps.reduce((sum,s) => sum + statusScore(S.status[s.id]),0);
+    const pct = Math.round((done / phaseSteps.length) * 100);
+    const current = steps[S.idx].phase === p.id;
+    return '<div class="phase-card ' + (current ? "current" : "") + '" style="--phase:' + p.color + '">' +
+      '<div class="phase-num">Phase ' + p.n + '</div><div class="phase-name">' + p.name + '</div>' +
+      '<div class="phase-promise">' + p.promise + '</div>' +
+      '<div class="phase-meta"><span>' + phaseSteps.length + ' beats</span><span>' + p.time + '</span><span>' + pct + '% tested</span></div>' +
+      '<div class="mini-meter"><div class="mini-fill" style="width:' + pct + '%"></div></div>' +
+      phaseSteps.map(s => '<button class="phase-step ' + (s.id === steps[S.idx].id ? "current" : "") + '" data-jump="' + steps.indexOf(s) + '">' + iconMarkup(s) + '<span>' + s.title + '</span></button>').join("") +
+    '</div>';
+  }).join("");
+}
+
+function renderLab(){
+  const d = diagnostics();
+  document.getElementById("scoreNum").textContent = d.score;
+  document.getElementById("scoreCopy").innerHTML = d.readyCount + " ready and " + d.fragileCount + " fragile steps on the MVP path.<br>" + d.noteCount + " comments captured. " + d.thumbUpCount + " up / " + d.thumbDownCount + " down.";
+  document.getElementById("scoreFill").style.width = d.score + "%";
+  document.getElementById("presetRow").innerHTML = Object.entries(presets).map(([id,p]) => '<button class="preset ' + (S.preset === id ? "on" : "") + '" data-preset="' + id + '">' + p.label + '</button>').join("");
+  document.getElementById("levers").innerHTML = leverDefs.map(l =>
+    '<div class="lever"><div class="lever-top"><div class="lever-name">' + l.name + '</div><div class="lever-val">' + S.levers[l.id] + '</div></div><input type="range" min="0" max="100" value="' + S.levers[l.id] + '" data-lever="' + l.id + '"></div>'
+  ).join("");
+  document.getElementById("riskList").innerHTML = d.risks.length ? d.risks.map(r => '<div class="risk-card ' + r.level + '"><b>' + r.title + '</b>' + r.body + '</div>').join("") : '<div class="risk-card"><b>No major blockers flagged</b>The scenario has enough safeguards to make a persuasive case. Keep testing assumptions.</div>';
+}
+
+function renderTimeline(){
+  document.getElementById("timeline").innerHTML = phases.map(p => {
+    const phaseSteps = steps.filter(s => s.phase === p.id);
+    return '<div class="phase-strip"><div class="strip-label">' + p.n + '</div>' + phaseSteps.map(s => {
+      const st = S.status[s.id];
+      return '<button class="dot ' + st + ' ' + (steps[S.idx].id === s.id ? "current" : "") + '" data-jump="' + steps.indexOf(s) + '" title="' + s.title + '"></button>';
+    }).join("") + '</div>';
+  }).join("");
+}
+
+function renderPlay(){
+  const btn = document.getElementById("playBtn");
+  btn.textContent = S.playing ? "Pause" : "Auto";
+  btn.classList.toggle("playing",S.playing);
+}
+
+function go(i){
+  S.idx = clamp(i,0,steps.length - 1);
+  render();
+}
+
+let timer = null;
+function setPlaying(on){
+  S.playing = on;
+  clearTimeout(timer);
+  renderPlay();
+  if (on) schedule();
+}
+function schedule(){
+  clearTimeout(timer);
+  if (!S.playing) return;
+  timer = setTimeout(() => {
+    if (S.idx >= steps.length - 1) setPlaying(false);
+    else { S.idx += 1; render(); schedule(); }
+  }, parseInt(document.getElementById("speedSel").value,10));
+}
+
+function debrief(){
+  const d = diagnostics();
+  let md = "# NPG Living Lab Workflow - Conductor Debrief\n\n";
+  md += "Readiness score: " + d.score + "/100\n";
+  md += "MVP path: " + d.readyCount + " ready, " + d.fragileCount + " fragile, " + d.noteCount + " comments\n";
+  md += "Thumb signals: " + d.thumbUpCount + " up, " + d.thumbDownCount + " down\n\n";
+  md += "## Cycle timing model\n\n";
+  phases.forEach(p => md += "- " + p.name + ": " + p.time + " (" + p.duration + ")\n");
+  md += "\n";
+  md += "## Scenario levers\n\n";
+  leverDefs.forEach(l => md += "- " + l.name + ": " + S.levers[l.id] + "/100\n");
+  md += "\n## Issue radar\n\n";
+  if (d.risks.length) d.risks.forEach(r => md += "- " + r.title + ": " + r.body + "\n");
+  else md += "- No major blockers flagged.\n";
+  md += "\n## Workflow comments / questions / suggestions\n\n";
+  phases.forEach(p => {
+    const phaseSteps = steps.filter(s => s.phase === p.id);
+    if (!phaseSteps.length) return;
+    md += "### " + p.name + "\n\n";
+    phaseSteps.forEach(s => {
+      const w = walkthrough[s.id];
+      const t = timePlan[s.id];
+      md += "- [" + S.status[s.id] + "] " + s.title + "\n";
+      if (S.thumbs[s.id]) md += "  Thumb: " + (S.thumbs[s.id] === "up" ? "up" : "down") + "\n";
+      md += "  Timing: " + t.window + "; effort " + t.estimate + "; " + t.cadence + "\n";
+      md += "  Start when: " + w.deps.join("; ") + "\n";
+      md += "  Actions: " + w.actions.join("; ") + "\n";
+      md += "  Review: " + w.review.join("; ") + "\n";
+      if (S.notes[s.id].trim()) md += "  Comment/question/suggestion: " + S.notes[s.id].trim().replace(/\n/g," ") + "\n";
+    });
+    md += "\n";
+  });
+  return md;
+}
+
+function feedbackBody(){
+  const d = diagnostics();
+  let md = "# NPG Workflow Feedback\n\n";
+  md += "Readiness score: " + d.score + "/100\n";
+  md += "Current step: " + steps[S.idx].title + "\n";
+  md += "MVP path: " + d.readyCount + " ready, " + d.fragileCount + " fragile\n";
+  md += "Thumb signals: " + d.thumbUpCount + " up, " + d.thumbDownCount + " down\n\n";
+  md += "## Step feedback\n\n";
+  let any = false;
+  steps.forEach(s => {
+    const comment = S.notes[s.id].trim();
+    const thumb = S.thumbs[s.id];
+    const status = S.status[s.id];
+    if (!comment && !thumb && status === "unknown") return;
+    any = true;
+    md += "### " + s.title + "\n";
+    md += "- Status: " + status + "\n";
+    if (thumb) md += "- Thumb: " + thumb + "\n";
+    if (comment) md += "- Comment/question/suggestion: " + comment.replace(/\n/g," ") + "\n";
+    md += "\n";
+  });
+  if (!any) md += "No step-specific comments were entered yet.\n\n";
+  md += "## Overall notes\n\n";
+  md += "- What felt unclear?\n- What dependency or role is missing?\n- What would make this workflow more usable?\n";
+  return md;
+}
+
+function feedbackIssueUrl(){
+  const title = "NPG workflow feedback";
+  const body = feedbackBody().slice(0,6500);
+  return "https://github.com/" + FEEDBACK_REPO + "/issues/new?title=" + encodeURIComponent(title) + "&body=" + encodeURIComponent(body);
+}
+
+document.addEventListener("click", e => {
+  const thumb = e.target.closest("[data-thumb]");
+  if (thumb) {
+    const id = steps[S.idx].id;
+    S.thumbs[id] = S.thumbs[id] === thumb.dataset.thumb ? "" : thumb.dataset.thumb;
+    render();
+    return;
+  }
+  const status = e.target.closest("[data-status]");
+  if (status) {
+    S.status[steps[S.idx].id] = status.dataset.status;
+    render();
+    return;
+  }
+  const jump = e.target.closest("[data-jump]");
+  if (jump) {
+    go(parseInt(jump.dataset.jump,10));
+    return;
+  }
+  const preset = e.target.closest("[data-preset]");
+  if (preset) {
+    S.preset = preset.dataset.preset;
+    S.levers = {...presets[S.preset].levers};
+    render();
+    return;
+  }
+});
+
+document.addEventListener("input", e => {
+  if (e.target.id === "notesTa") {
+    S.notes[steps[S.idx].id] = e.target.value;
+    renderLab();
+  }
+  if (e.target.dataset.lever) {
+    S.preset = "custom";
+    S.levers[e.target.dataset.lever] = parseInt(e.target.value,10);
+    renderLab();
+  }
+});
+
+document.getElementById("prevBtn").addEventListener("click",() => go(S.idx - 1));
+document.getElementById("nextBtn").addEventListener("click",() => go(S.idx + 1));
+document.getElementById("advanceBtn").addEventListener("click",() => go(S.idx + 1));
+document.getElementById("playBtn").addEventListener("click",() => setPlaying(!S.playing));
+document.getElementById("speedSel").addEventListener("change",() => { if (S.playing) schedule(); });
+document.getElementById("aboutBtn").addEventListener("click",() => document.getElementById("aboutModal").classList.add("show"));
+document.getElementById("aboutClose").addEventListener("click",() => document.getElementById("aboutModal").classList.remove("show"));
+document.getElementById("aboutModal").addEventListener("click",e => { if (e.target.id === "aboutModal") document.getElementById("aboutModal").classList.remove("show"); });
+document.getElementById("feedbackBtn").addEventListener("click",() => {
+  document.getElementById("feedbackPreview").value = feedbackBody();
+  document.getElementById("feedbackModal").classList.add("show");
+});
+document.getElementById("feedbackClose").addEventListener("click",() => document.getElementById("feedbackModal").classList.remove("show"));
+document.getElementById("feedbackModal").addEventListener("click",e => { if (e.target.id === "feedbackModal") document.getElementById("feedbackModal").classList.remove("show"); });
+document.getElementById("feedbackCopy").addEventListener("click",() => {
+  navigator.clipboard.writeText(document.getElementById("feedbackPreview").value).then(() => {
+    const b = document.getElementById("feedbackCopy");
+    b.textContent = "Copied";
+    setTimeout(() => b.textContent = "Copy feedback",1400);
+  });
+});
+document.getElementById("feedbackOpen").addEventListener("click",() => {
+  window.open(feedbackIssueUrl(), "_blank", "noopener");
+});
+document.getElementById("debriefBtn").addEventListener("click",() => {
+  document.getElementById("debriefText").value = debrief();
+  document.getElementById("modal").classList.add("show");
+});
+document.getElementById("modalClose").addEventListener("click",() => document.getElementById("modal").classList.remove("show"));
+document.getElementById("modal").addEventListener("click",e => { if (e.target.id === "modal") document.getElementById("modal").classList.remove("show"); });
+document.getElementById("copyBtn").addEventListener("click",() => {
+  navigator.clipboard.writeText(document.getElementById("debriefText").value).then(() => {
+    const b = document.getElementById("copyBtn");
+    b.textContent = "Copied";
+    setTimeout(() => b.textContent = "Copy debrief",1400);
+  });
+});
+document.addEventListener("keydown", e => {
+  if (["TEXTAREA","INPUT","SELECT"].includes(e.target.tagName)) return;
+  if (e.key === "ArrowRight" || e.key === " ") { e.preventDefault(); go(S.idx + 1); }
+  if (e.key === "ArrowLeft") { e.preventDefault(); go(S.idx - 1); }
+});
+
+render();
+</script>
+</body>
+</html>
