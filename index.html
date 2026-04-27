@@ -200,8 +200,14 @@ button{cursor:pointer}
   border:1px solid var(--line);border-radius:15px;background:var(--paper);padding:15px;margin-bottom:14px;
   box-shadow:inset 4px 0 0 var(--phase);
 }
+.phase-kicker{font-size:10px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);margin-bottom:6px}
 .phase-review-title{font-size:18px;font-weight:800;line-height:1.08;margin-bottom:7px}
 .phase-review-copy{font-size:13px;line-height:1.42;color:var(--muted);margin-bottom:12px}
+.checkpoint-summary{
+  border:1px solid rgba(103,48,145,.12);background:rgba(103,48,145,.045);
+  border-radius:11px;padding:10px;font-size:13px;line-height:1.42;color:var(--muted);font-weight:650;
+}
+.checkpoint-summary b{display:block;color:var(--ink);font-size:14px;margin-bottom:3px}
 .phase-time{
   display:grid;grid-template-columns:1fr 1fr;gap:8px;border-top:1px solid var(--line);
   padding-top:10px;margin-top:10px;
@@ -231,12 +237,20 @@ button{cursor:pointer}
 .score-copy{font-size:13px;line-height:1.4;color:rgba(255,255,255,.72);padding-bottom:3px}
 .score-bar{height:8px;background:rgba(255,255,255,.13);border-radius:999px;overflow:hidden;margin-top:16px}
 .score-fill{height:100%;width:0;background:var(--lime);border-radius:999px;transition:width .25s}
-.preset-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-bottom:14px}
+.scenario-current{
+  border:1px solid var(--line);background:var(--wash);border-radius:12px;padding:11px;margin-bottom:9px;
+  font-size:12px;line-height:1.42;color:var(--muted);
+}
+.scenario-current b{display:block;color:var(--ink);font-size:13px;margin-bottom:3px}
+.preset-row{display:grid;grid-template-columns:1fr;gap:8px;margin-bottom:14px}
 .preset{
   border:1px solid var(--line);background:var(--paper);border-radius:10px;
-  padding:9px 7px;font-size:11px;font-weight:800;color:var(--muted);
+  padding:10px 11px;text-align:left;color:var(--muted);
 }
 .preset.on{background:rgba(103,48,145,.09);border-color:rgba(103,48,145,.22);color:var(--purple)}
+.scenario-label{display:block;font-size:12px;font-weight:800;color:var(--ink);line-height:1.2}
+.preset.on .scenario-label{color:var(--purple)}
+.scenario-question{display:block;font-size:11px;line-height:1.35;font-weight:650;color:var(--muted);margin-top:4px}
 .lever{padding:13px 0;border-top:1px solid var(--line)}
 .lever-top{display:flex;justify-content:space-between;gap:10px;margin-bottom:8px}
 .lever-name{font-size:13px;font-weight:800;color:var(--ink)}
@@ -406,7 +420,7 @@ button{cursor:pointer}
     </section>
 
     <aside class="lab">
-      <div class="panel-hd">Review cockpit</div>
+      <div class="panel-hd">Phase checkpoint</div>
       <div class="phase-review" id="phaseReview"></div>
       <div class="panel-hd">Walkthrough readiness</div>
       <div class="score-card">
@@ -416,6 +430,8 @@ button{cursor:pointer}
         </div>
         <div class="score-bar"><div class="score-fill" id="scoreFill"></div></div>
       </div>
+      <div class="panel-hd" style="margin-top:14px">Build evaluation scenarios</div>
+      <div class="scenario-current" id="scenarioCurrent"></div>
       <div class="preset-row" id="presetRow"></div>
       <div id="levers"></div>
       <div class="panel-hd" style="margin-top:18px">Issue radar</div>
@@ -457,8 +473,8 @@ button{cursor:pointer}
           <div class="about-row"><b>Workflow spine:</b> the left rail shows the full cycle across Grounding, Collaborative Building, Shared Output Hub, Integration and Synthesis, and Redesign and Feedback.</div>
           <div class="about-row"><b>Current step:</b> the center stage explains the active beat, the expected timing, what must be true before it starts, what actions happen, and what should be reviewed before moving on.</div>
           <div class="about-row"><b>Flow:</b> the before-now-next strip shows where the current beat sits without pretending a missing previous or next step exists.</div>
-          <div class="about-row"><b>Review cockpit:</b> the right panel names the phase entry gate, current job, exit gate, and decision that reviewers should pressure-test.</div>
-          <div class="about-row"><b>Readiness and issue radar:</b> status marks, scenario levers, and risks help reveal where the workflow is credible, fragile, or under-specified.</div>
+          <div class="about-row"><b>Phase checkpoint:</b> the right panel gives the review lens around the current step: phase entry, exit, and the decision reviewers should pressure-test.</div>
+          <div class="about-row"><b>Evaluation scenarios:</b> what-if questions adjust the assumption levers and show where the workflow may become credible, fragile, or under-specified.</div>
         </div>
       </div>
       <div class="about-section">
@@ -797,26 +813,27 @@ function rawIcon(name) {
 }
 
 const leverDefs = [
-  {id:"grounding",name:"Grounding depth",risk:"Grounding is too thin",body:"The NPG may design from aspiration rather than pod reality."},
-  {id:"output",name:"Output clarity",risk:"Shared output is blurry",body:"The project can split into parallel pod prototypes."},
+  {id:"grounding",name:"Pod reality confidence",risk:"Grounding is too thin",body:"The NPG may design from aspiration rather than pod reality."},
+  {id:"output",name:"Shared output clarity",risk:"Shared output is blurry",body:"The project can split into parallel pod prototypes."},
   {id:"synthesis",name:"Synthesis capacity",risk:"Synthesis is underpowered",body:"Integration becomes invisible labour or a final report task."},
-  {id:"feedback",name:"Community feedback strength",risk:"Feedback is too late",body:"Communities may only see the output after it has hardened."},
-  {id:"aiai",name:"AIAI Lab role",risk:"Technical integration is informal",body:"Standards, maintenance, and deployment accountability stay unclear."},
-  {id:"capacity",name:"Coordination capacity",risk:"Coordination load is too high",body:"The model may be right but operationally exhausting."}
+  {id:"feedback",name:"Community review power",risk:"Feedback is too late",body:"Communities may only see the output after it has hardened."},
+  {id:"aiai",name:"AIAI integration support",risk:"Technical integration is informal",body:"Standards, maintenance, and deployment accountability stay unclear."},
+  {id:"capacity",name:"Coordination bandwidth",risk:"Coordination load is too high",body:"The model may be right but operationally exhausting."}
 ];
 
 const presets = {
-  mvp:{label:"MVP test",levers:{grounding:76,output:72,synthesis:68,feedback:64,aiai:52,capacity:60}},
-  ai:{label:"AI-heavy",levers:{grounding:68,output:74,synthesis:63,feedback:54,aiai:84,capacity:48}},
-  strain:{label:"Capacity strain",levers:{grounding:50,output:58,synthesis:42,feedback:46,aiai:58,capacity:28}}
+  baseline:{label:"Current draft",question:"What if we review the workflow as it is written today?",levers:{grounding:76,output:72,synthesis:68,feedback:64,aiai:52,capacity:60}},
+  slowreview:{label:"Slower review cycle",question:"What if alignment or approval needs another round before moving on?",levers:{grounding:70,output:64,synthesis:58,feedback:50,aiai:52,capacity:46}},
+  strain:{label:"Pod capacity strain",question:"What if pods can participate but have limited coordination time?",levers:{grounding:50,output:58,synthesis:42,feedback:46,aiai:58,capacity:28}},
+  support:{label:"More integration support",question:"What if the Lab or synthesis role carries more connective work?",levers:{grounding:70,output:76,synthesis:78,feedback:60,aiai:80,capacity:62}}
 };
 
 const critical = steps.filter(s => s.mvp).map(s => s.id);
 const S = {
   idx:0,
   playing:false,
-  preset:"mvp",
-  levers:{...presets.mvp.levers},
+  preset:"baseline",
+  levers:{...presets.baseline.levers},
   status:Object.fromEntries(steps.map(s => [s.id,"unknown"])),
   notes:Object.fromEntries(steps.map(s => [s.id,""])),
   thumbs:Object.fromEntries(steps.map(s => [s.id,""]))
@@ -829,6 +846,7 @@ function stepPhase(step){return phaseFor(step.phase)}
 function clamp(n,min,max){return Math.max(min,Math.min(max,n))}
 function statusScore(st){return st === "ready" ? 1 : st === "fragile" ? .45 : 0}
 function listMarkup(items){return items.map(item => '<div class="walk-item">' + item + '</div>').join("")}
+function activeScenario(){return presets[S.preset] || {label:"Custom what-if",question:"What if we adjust the assumptions by hand?"}}
 
 function renderTiming(step){
   const t = timePlan[step.id];
@@ -858,8 +876,9 @@ function renderPhaseReview(){
   const fragile = phaseSteps.filter(s => S.status[s.id] === "fragile").length;
   document.getElementById("phaseReview").style.setProperty("--phase",ph.color);
   document.getElementById("phaseReview").innerHTML =
+    '<div class="phase-kicker">Review lens for this phase</div>' +
     '<div class="phase-review-title">' + ph.name + '</div>' +
-    '<div class="phase-review-copy">' + ph.promise + '</div>' +
+    '<div class="checkpoint-summary"><b>Why this checkpoint exists</b>' + r.now + '</div>' +
     '<div class="dependency-strip">' +
       '<span class="dependency-chip">' + phaseSteps.length + ' steps</span>' +
       '<span class="dependency-chip">' + ready + ' ready</span>' +
@@ -870,9 +889,8 @@ function renderPhaseReview(){
       '<div class="phase-time-box"><div class="phase-time-num">' + t.window + '</div><div class="phase-time-cap">Current step</div></div>' +
     '</div>' +
     '<div class="phase-gate"><div class="phase-gate-label">Entry gate</div><div class="phase-gate-text">' + r.entry + '</div></div>' +
-    '<div class="phase-gate"><div class="phase-gate-label">Current job</div><div class="phase-gate-text">' + r.now + '</div></div>' +
     '<div class="phase-gate"><div class="phase-gate-label">Exit gate</div><div class="phase-gate-text">' + r.exit + '</div></div>' +
-    '<div class="phase-gate"><div class="phase-gate-label">Review decision</div><div class="phase-gate-text">' + r.decision + '</div></div>';
+    '<div class="phase-gate"><div class="phase-gate-label">Decision to test</div><div class="phase-gate-text">' + r.decision + '</div></div>';
 }
 
 function diagnostics(){
@@ -902,7 +920,7 @@ function render(){
   const ph = stepPhase(step);
   document.documentElement.style.setProperty("--phase",ph.color);
   document.getElementById("phasePill").textContent = ph.n + " - " + ph.short + " / " + ph.time;
-  document.getElementById("stepEye").innerHTML = "Beat " + (S.idx + 1) + " / " + steps.length + " - " + ph.name + (step.mvp ? '<span class="mvp-tag">MVP path</span>' : "");
+  document.getElementById("stepEye").innerHTML = "Beat " + (S.idx + 1) + " / " + steps.length + " - " + ph.name + (step.mvp ? '<span class="mvp-tag">Core path</span>' : "");
   document.getElementById("stepIcon").innerHTML = iconMarkup(step,"");
   document.getElementById("stepTitle").textContent = step.title;
   document.getElementById("stepCopy").textContent = step.copy;
@@ -968,9 +986,11 @@ function renderRail(){
 function renderLab(){
   const d = diagnostics();
   document.getElementById("scoreNum").textContent = d.score;
-  document.getElementById("scoreCopy").innerHTML = d.readyCount + " ready and " + d.fragileCount + " fragile steps on the MVP path.<br>" + d.noteCount + " comments captured. " + d.thumbUpCount + " up / " + d.thumbDownCount + " down.";
+  document.getElementById("scoreCopy").innerHTML = d.readyCount + " ready and " + d.fragileCount + " fragile steps on the core path.<br>" + d.noteCount + " comments captured. " + d.thumbUpCount + " up / " + d.thumbDownCount + " down.";
   document.getElementById("scoreFill").style.width = d.score + "%";
-  document.getElementById("presetRow").innerHTML = Object.entries(presets).map(([id,p]) => '<button class="preset ' + (S.preset === id ? "on" : "") + '" data-preset="' + id + '">' + p.label + '</button>').join("");
+  const scenario = activeScenario();
+  document.getElementById("scenarioCurrent").innerHTML = '<b>' + scenario.label + '</b>' + scenario.question;
+  document.getElementById("presetRow").innerHTML = Object.entries(presets).map(([id,p]) => '<button class="preset ' + (S.preset === id ? "on" : "") + '" data-preset="' + id + '"><span class="scenario-label">' + p.label + '</span><span class="scenario-question">' + p.question + '</span></button>').join("");
   document.getElementById("levers").innerHTML = leverDefs.map(l =>
     '<div class="lever"><div class="lever-top"><div class="lever-name">' + l.name + '</div><div class="lever-val">' + S.levers[l.id] + '</div></div><input type="range" min="0" max="100" value="' + S.levers[l.id] + '" data-lever="' + l.id + '"></div>'
   ).join("");
@@ -1018,12 +1038,15 @@ function debrief(){
   const d = diagnostics();
   let md = "# NPG Living Lab Workflow - Conductor Debrief\n\n";
   md += "Readiness score: " + d.score + "/100\n";
-  md += "MVP path: " + d.readyCount + " ready, " + d.fragileCount + " fragile, " + d.noteCount + " comments\n";
+  md += "Core path: " + d.readyCount + " ready, " + d.fragileCount + " fragile, " + d.noteCount + " comments\n";
   md += "Thumb signals: " + d.thumbUpCount + " up, " + d.thumbDownCount + " down\n\n";
   md += "## Cycle timing model\n\n";
   phases.forEach(p => md += "- " + p.name + ": " + p.time + " (" + p.duration + ")\n");
   md += "\n";
-  md += "## Scenario levers\n\n";
+  md += "## Build evaluation scenario\n\n";
+  const scenario = activeScenario();
+  md += "Selected scenario: " + scenario.label + "\n";
+  md += "What-if question: " + scenario.question + "\n\n";
   leverDefs.forEach(l => md += "- " + l.name + ": " + S.levers[l.id] + "/100\n");
   md += "\n## Issue radar\n\n";
   if (d.risks.length) d.risks.forEach(r => md += "- " + r.title + ": " + r.body + "\n");
@@ -1054,8 +1077,12 @@ function feedbackBody(){
   let md = "# NPG Workflow Feedback\n\n";
   md += "Readiness score: " + d.score + "/100\n";
   md += "Current step: " + steps[S.idx].title + "\n";
-  md += "MVP path: " + d.readyCount + " ready, " + d.fragileCount + " fragile\n";
+  md += "Core path: " + d.readyCount + " ready, " + d.fragileCount + " fragile\n";
   md += "Thumb signals: " + d.thumbUpCount + " up, " + d.thumbDownCount + " down\n\n";
+  md += "## Build evaluation scenario\n\n";
+  const scenario = activeScenario();
+  md += "- Selected scenario: " + scenario.label + "\n";
+  md += "- What-if question: " + scenario.question + "\n\n";
   md += "## Step feedback\n\n";
   let any = false;
   steps.forEach(s => {
