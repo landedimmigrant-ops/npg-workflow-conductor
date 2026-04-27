@@ -208,16 +208,21 @@ button{cursor:pointer}
   border-radius:11px;padding:10px;font-size:13px;line-height:1.42;color:var(--muted);font-weight:650;
 }
 .checkpoint-summary b{display:block;color:var(--ink);font-size:14px;margin-bottom:3px}
-.phase-time{
-  display:grid;grid-template-columns:1fr 1fr;gap:8px;border-top:1px solid var(--line);
-  padding-top:10px;margin-top:10px;
-}
+.phase-time{display:grid;gap:8px;border-top:1px solid var(--line);padding-top:10px;margin-top:10px}
 .phase-time-box{
   border:1px solid rgba(103,48,145,.12);background:rgba(103,48,145,.045);
   border-radius:10px;padding:8px;
 }
+.phase-time-box.phase-total{background:var(--phase);border-color:var(--phase);color:#fff}
+.phase-time-box.phase-step{border-style:dashed;background:rgba(180,83,9,.055);border-color:rgba(180,83,9,.24)}
 .phase-time-num{font-size:14px;font-weight:800;color:var(--purple);line-height:1.1}
 .phase-time-cap{font-size:9px;font-weight:800;letter-spacing:.11em;text-transform:uppercase;color:var(--faint);margin-top:4px}
+.phase-time-note{font-size:11px;line-height:1.35;color:var(--muted);font-weight:650;margin-top:5px}
+.phase-total .phase-time-num{font-size:17px;color:#fff}
+.phase-total .phase-time-cap{color:rgba(255,255,255,.68);margin-top:0;margin-bottom:5px}
+.phase-total .phase-time-note{color:rgba(255,255,255,.72)}
+.phase-step .phase-time-num{color:#7b4210}
+.phase-step .phase-time-cap{color:#9c6a18;margin-top:0;margin-bottom:5px}
 .phase-gate{border-top:1px solid var(--line);padding-top:10px;margin-top:10px}
 .phase-gate-label{
   font-size:9px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);
@@ -473,7 +478,7 @@ button{cursor:pointer}
           <div class="about-row"><b>Workflow spine:</b> the left rail shows the full cycle across Grounding, Collaborative Building, Shared Output Hub, Integration and Synthesis, and Redesign and Feedback.</div>
           <div class="about-row"><b>Current step:</b> the center stage explains the active beat, the expected timing, what must be true before it starts, what actions happen, and what should be reviewed before moving on.</div>
           <div class="about-row"><b>Flow:</b> the before-now-next strip shows where the current beat sits without pretending a missing previous or next step exists.</div>
-          <div class="about-row"><b>Phase checkpoint:</b> the right panel gives the review lens around the current step: phase entry, exit, and the decision reviewers should pressure-test.</div>
+          <div class="about-row"><b>Phase checkpoint:</b> the right panel gives the review lens around the current step: total phase window, active step window, phase entry, phase exit, and the decision reviewers should pressure-test.</div>
           <div class="about-row"><b>Evaluation scenarios:</b> what-if questions adjust the assumption levers and show where the workflow may become credible, fragile, or under-specified.</div>
         </div>
       </div>
@@ -872,6 +877,7 @@ function renderPhaseReview(){
   const r = phaseReviews[ph.id];
   const t = timePlan[step.id];
   const phaseSteps = steps.filter(s => s.phase === ph.id);
+  const phasePosition = phaseSteps.findIndex(s => s.id === step.id) + 1;
   const ready = phaseSteps.filter(s => S.status[s.id] === "ready").length;
   const fragile = phaseSteps.filter(s => S.status[s.id] === "fragile").length;
   document.getElementById("phaseReview").style.setProperty("--phase",ph.color);
@@ -880,13 +886,13 @@ function renderPhaseReview(){
     '<div class="phase-review-title">' + ph.name + '</div>' +
     '<div class="checkpoint-summary"><b>Why this checkpoint exists</b>' + r.now + '</div>' +
     '<div class="dependency-strip">' +
-      '<span class="dependency-chip">' + phaseSteps.length + ' steps</span>' +
+      '<span class="dependency-chip">Step ' + phasePosition + ' of ' + phaseSteps.length + ' in phase</span>' +
       '<span class="dependency-chip">' + ready + ' ready</span>' +
       '<span class="dependency-chip">' + fragile + ' fragile</span>' +
     '</div>' +
     '<div class="phase-time">' +
-      '<div class="phase-time-box"><div class="phase-time-num">' + ph.time + '</div><div class="phase-time-cap">' + ph.duration + '</div></div>' +
-      '<div class="phase-time-box"><div class="phase-time-num">' + t.window + '</div><div class="phase-time-cap">Current step</div></div>' +
+      '<div class="phase-time-box phase-total"><div class="phase-time-cap">Total phase window</div><div class="phase-time-num">' + ph.time + '</div><div class="phase-time-note">' + ph.duration + ' across ' + phaseSteps.length + ' steps</div></div>' +
+      '<div class="phase-time-box phase-step"><div class="phase-time-cap">Current step window</div><div class="phase-time-num">' + t.window + '</div><div class="phase-time-note">' + step.title + ' is step ' + phasePosition + ' inside this phase</div></div>' +
     '</div>' +
     '<div class="phase-gate"><div class="phase-gate-label">Entry gate</div><div class="phase-gate-text">' + r.entry + '</div></div>' +
     '<div class="phase-gate"><div class="phase-gate-label">Exit gate</div><div class="phase-gate-text">' + r.exit + '</div></div>' +
