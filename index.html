@@ -362,7 +362,7 @@ button{cursor:pointer}
       <span class="brand-kicker">AbInt Phase 2</span>
       <span class="brand-title">NPG Workflow Conductor</span>
     </div>
-    <span class="top-pill" id="phasePill">Phase 1</span>
+    <span class="top-pill" id="phasePill">Cycle 1</span>
     <div class="spacer"></div>
     <button class="top-btn" id="playBtn">Auto</button>
     <select class="select" id="speedSel" aria-label="Auto speed">
@@ -425,7 +425,7 @@ button{cursor:pointer}
     </section>
 
     <aside class="lab">
-      <div class="panel-hd">Phase checkpoint</div>
+      <div class="panel-hd">Cycle checkpoint</div>
       <div class="phase-review" id="phaseReview"></div>
       <div class="panel-hd">Walkthrough readiness</div>
       <div class="score-card">
@@ -470,15 +470,15 @@ button{cursor:pointer}
     </div>
     <div class="about-body">
       <div class="about-intro">
-        This tool is a walkthrough and review surface for the NPG Living Lab workflow. It helps a group test whether an NPG can move from pod realities to one shared network-scale output, while making dependencies, timing, risks, and open questions visible.
+        This tool is a walkthrough and review surface for the Step 8 NPG Living Lab workflow. It helps a group test whether an NPG can move from pod realities to one shared network-scale output, while making dependencies, timing, risks, and open questions visible.
       </div>
       <div class="about-section">
         <div class="about-heading">How the system works</div>
         <div class="about-list">
-          <div class="about-row"><b>Workflow spine:</b> the left rail shows the full cycle across Grounding, Collaborative Building, Shared Output Hub, Integration and Synthesis, and Redesign and Feedback.</div>
+          <div class="about-row"><b>Workflow spine:</b> the left rail shows the four recurring cycles: Grounding, Collaborative Building, Integration and Synthesis, and Redesign and Community Feedback.</div>
           <div class="about-row"><b>Current step:</b> the center stage explains the active beat, the expected timing, what must be true before it starts, what actions happen, and what should be reviewed before moving on.</div>
           <div class="about-row"><b>Flow:</b> the before-now-next strip shows where the current beat sits without pretending a missing previous or next step exists.</div>
-          <div class="about-row"><b>Phase checkpoint:</b> the right panel gives the review lens around the current step: total phase window, active step window, phase entry, phase exit, and the decision reviewers should pressure-test.</div>
+          <div class="about-row"><b>Cycle checkpoint:</b> the right panel gives the review lens around the current step: total cycle window, active step window, cycle entry, cycle exit, and the decision reviewers should pressure-test.</div>
           <div class="about-row"><b>Evaluation scenarios:</b> what-if questions adjust the assumption levers and show where the workflow may become credible, fragile, or under-specified.</div>
         </div>
       </div>
@@ -520,11 +520,10 @@ button{cursor:pointer}
 const FEEDBACK_REPO = "landedimmigrant-ops/npg-workflow-conductor";
 
 const phases = [
-  {id:"grounding",n:"01",name:"Grounding",short:"Grounding",color:"#7a48b8",time:"Weeks 1-12",duration:"~90 days",promise:"Turn pod reality into the architecture for a shared output."},
-  {id:"building",n:"02",name:"Collaborative Building",short:"Building",color:"#673091",time:"Weeks 13-30",duration:"~18 weeks",promise:"Resource different pod contributions to one network-scale thing."},
-  {id:"hub",n:"H",name:"Shared Output Hub",short:"Hub",color:"#5a9d44",time:"All cycle",duration:"Standing check",promise:"Keep attention on the one output the NPG is building together."},
-  {id:"synthesis",n:"03",name:"Integration and Synthesis",short:"Synthesis",color:"#3a9060",time:"Weeks 31-40",duration:"~10 weeks",promise:"Make integration a research discipline, not a final reporting task."},
-  {id:"redesign",n:"04",name:"Redesign and Feedback",short:"Feedback",color:"#9050c8",time:"Weeks 40-48",duration:"~9 weeks",promise:"Return the working output to communities and redesign the next cycle."}
+  {id:"grounding",n:"1",name:"Grounding",short:"Grounding",color:"#7a48b8",time:"Weeks 1-12",duration:"~90 days",promise:"Turn pod reality into the architecture for a shared output."},
+  {id:"building",n:"2",name:"Collaborative Building",short:"Building",color:"#673091",time:"Weeks 13-30",duration:"~18 weeks",promise:"Resource different pod contributions to one network-scale thing."},
+  {id:"synthesis",n:"3",name:"Integration and Synthesis",short:"Synthesis",color:"#3a9060",time:"Weeks 31-40",duration:"~10 weeks",promise:"Make integration a research discipline, not a final reporting task."},
+  {id:"redesign",n:"4",name:"Redesign and Community Feedback",short:"Feedback",color:"#9050c8",time:"Weeks 40-48",duration:"~9 weeks",promise:"Return the working output to communities and redesign the next cycle."}
 ];
 
 const steps = [
@@ -541,13 +540,13 @@ const steps = [
   {id:"codesign",phase:"building",title:"Community Engagement and Co-design",copy:"Pods define their own engagement approach while contributing to a shared network-scale output.",outputs:["Co-design records","Validation evidence","Community concerns"],q:"Where does community judgment enter before the output hardens?",risk:"Late feedback turns co-design into consultation after the fact."},
   {id:"aiai",phase:"building",title:"AIAI Lab Integration",copy:"The Lab acts as connective technical tissue for AI-enabled NPGs: standards, integration, deployment support, and cross-context validation.",outputs:["Technical standards","Integration support","Deployment path"],q:"Is the Lab role formal enough to carry cross-pod technical responsibility?",risk:"If informal, standards and accountability become unclear."},
   {id:"exchange",phase:"building",title:"Cross-Pod Exchange",mvp:true,copy:"Pods exchange materials, methods, and findings during the cycle, not only at the end.",outputs:["Exchange rhythm","Shared working sessions","Mid-cycle learning"],q:"What has to move between pods while the work is still changeable?",risk:"If exchange waits for synthesis, the NPG becomes five projects meeting occasionally."},
-  {id:"sharedhub",phase:"hub",title:"Shared Output Hub",mvp:true,copy:"This is the center of the workflow: several pods contributing different capacities to one thing that operates at network scale.",outputs:["One shared NPG output","Network-scale value proposition","Focus for investment"],q:"Does every contribution point back to the same object of work?",risk:"The hub is the main safeguard against Phase 1 logic returning under a new name."},
+  {id:"sharedhub",phase:"building",title:"Shared Output Alignment Check",mvp:true,copy:"This standing checkpoint keeps the shared output at the centre while pods contribute different capacities during collaborative building.",outputs:["Shared output drift check","Network-scale value proposition","Focus for investment and integration"],q:"Does every contribution still point back to the same object of work?",risk:"Without this checkpoint, Phase 1-style parallel pod activity can return under a new name."},
   {id:"convening",phase:"synthesis",title:"Integration Convening",mvp:true,copy:"Quarterly or biannual gatherings bring contributions together to be tested, challenged, and developed further.",outputs:["Integration decisions","Tension log","Next adjustments"],q:"Is the convening built for integration or just status reporting?",risk:"Status meetings will not create synthesis."},
-  {id:"coordinator",phase:"synthesis",title:"Synthesis Coordinator Role",mvp:true,copy:"A research integrator weaves contributions together and identifies what the shared output is becoming.",outputs:["Named synthesis labour","Integration stewardship","Research memory"],q:"Who is paid and empowered to hold synthesis?",risk:"Without this role, the model fragments at the exact point it needs to cohere."},
+  {id:"coordinator",phase:"synthesis",title:"Synthesis Coordinator Role",mvp:true,copy:"The HQ Project Manager holds operational responsibility, while a synthesis coordinator or research integrator holds the research work of weaving contributions together.",outputs:["PM and synthesis role split","Named research integrator","Integration stewardship and research memory"],q:"Who is paid and empowered to hold synthesis as research labour?",risk:"Without this role, the model fragments at the exact point it needs to cohere."},
   {id:"memos",phase:"synthesis",title:"Integration Documents and Memos",mvp:true,copy:"Memos capture what is being integrated, what tensions are unresolved, and what decisions were made.",outputs:["Synthesis memos","Decision trail","Material for formal outputs"],q:"Will someone six months later understand why the output changed?",risk:"Without memos, learning disappears into meetings."},
   {id:"working",phase:"synthesis",title:"Working Output Version",copy:"The first integrated version is not final. It is a working object that can be tested, used, and redesigned.",outputs:["Working version","Deployment assumptions","Evidence of integration"],q:"Can pods and communities react to something concrete?",risk:"If the output never becomes tangible, feedback stays abstract."},
   {id:"gaps",phase:"synthesis",title:"Gap and Adjustment Analysis",copy:"Identify what is working, what is missing, and which contributions should continue, deepen, close, or be replaced.",outputs:["Gap analysis","Adjustment decisions","Contribution changes"],q:"Can the model openly hold failed or replaced contributions?",risk:"If failure is hidden, the next cycle repeats avoidable mistakes."},
-  {id:"formal",phase:"synthesis",title:"First-Draft Formal Outputs",copy:"Publications, policy papers, workshops, and technical documentation emerge from the shared output and integration work.",outputs:["Draft papers","Policy or technical documentation","Workshop material"],q:"Are formal outputs being generated from integration rather than bolted on?",risk:"Formal outputs can distract from the shared output if they become the real goal."},
+  {id:"formal",phase:"synthesis",title:"First-Draft Section 9 Outputs",copy:"Publications, policy papers, workshops, AI prototypes, and technical documentation emerge from the shared output and the integration work that produces it.",outputs:["Draft Section 9 artefacts","Policy, publication, or technical documentation","Workshop or prototype material"],q:"Are formal outputs being generated from integration rather than bolted on?",risk:"Formal outputs can distract from the shared output if they become the real goal."},
   {id:"feedback",phase:"redesign",title:"Community Feedback Loop",mvp:true,copy:"Each pod brings the working output back to the communities it works with, and those responses shape the next round.",outputs:["Community responses","Consent and concern signals","Adaptation priorities"],q:"What would make communities say this output is not ready?",risk:"If feedback is symbolic, the living lab becomes a deployment exercise."},
   {id:"reshape",phase:"redesign",title:"Contribution Reshaping",copy:"Pods adjust, deepen, close, or open contributions based on synthesis and community response.",outputs:["Revised contribution shapes","Changed resourcing needs","Next-cycle commitments"],q:"What should stop, start, or change before the next cycle?",risk:"A cycle that cannot reshape is not really iterative."},
   {id:"updated",phase:"redesign",title:"Updated Output Version",copy:"The shared output evolves through use, feedback, and redesign.",outputs:["Updated version","New validation needs","Evidence of learning"],q:"Can we show how the output changed because of the cycle?",risk:"If changes are invisible, funders and communities cannot see learning."},
@@ -569,7 +568,7 @@ const timePlan = {
   codesign:{window:"Weeks 15-30",estimate:"6-10 weeks",cadence:"Pod-defined engagement",note:"Early enough to change the work, not only validate it."},
   aiai:{window:"Weeks 13-30",estimate:"Standing support",cadence:"Weekly or biweekly technical touchpoints",note:"Formalize the Lab role before integration pressure peaks."},
   exchange:{window:"Weeks 13-30",estimate:"Every 3-4 weeks",cadence:"Recurring cross-pod sessions",note:"Exchange is a rhythm across the whole build phase, not a single event."},
-  sharedhub:{window:"All cycle; formal checks at Weeks 12, 30, 40",estimate:"30-60 min per check",cadence:"Standing alignment checkpoint",note:"Use it whenever the work starts sounding like separate pod projects."},
+  sharedhub:{window:"Checks at Weeks 12, 30, 40",estimate:"30-60 min per check",cadence:"Standing alignment checkpoint",note:"Use it whenever the work starts sounding like separate pod projects."},
   convening:{window:"Weeks 31-32",estimate:"1-2 weeks prep plus convening",cadence:"Quarterly or cycle-end integration",note:"This meeting should make decisions, not only collect updates."},
   coordinator:{window:"Named by Week 12; active Weeks 13-48",estimate:"0.2-0.5 FTE",cadence:"Continuous synthesis labour",note:"The role starts early so synthesis has memory before integration begins."},
   memos:{window:"Weeks 31-36",estimate:"1-2 weeks after each convening",cadence:"Decision trail",note:"Fast memo cycles preserve what changed before the room memory fades."},
@@ -596,17 +595,11 @@ const phaseReviews = {
     exit:"Components, site evidence, methods, data, and technical supports are mature enough to integrate.",
     decision:"Is each contribution visibly changing the same shared output?"
   },
-  hub:{
-    entry:"The NPG has multiple contributions in motion and needs a single object of attention.",
-    now:"Recenter the conversation on what is being built together.",
-    exit:"Every contribution has a clear route into the shared output and the investment case is legible.",
-    decision:"Does the work still require the whole network, or has it split into parallel pod activity?"
-  },
   synthesis:{
     entry:"Contributions are tangible enough to compare, combine, challenge, and document.",
     now:"Integrate the parts, preserve the decision trail, and turn tensions into research learning.",
     exit:"There is a working version, synthesis memory, gap analysis, and first formal outputs.",
-    decision:"Is synthesis funded and empowered as research labour, not meeting administration?"
+    decision:"Are operational project management and research synthesis both resourced and empowered?"
   },
   redesign:{
     entry:"A working version exists and communities can respond to something concrete.",
@@ -650,7 +643,7 @@ const walkthrough = {
   frame:{
     deps:["Shared output, contribution architecture, and pod modes are drafted","Steering needs proposal language","Evaluation expectations are known"],
     actions:["Define success for the first working version","Name learning signals for each cycle","Write how progress will be reported as output evolution"],
-    handoff:["Becomes the proposal logic and review basis","Sets what status reporting should track"],
+    handoff:["Becomes the proposal logic and review basis","Shifts status reporting toward output evolution across cycles"],
     review:["Will funders understand why early months may look quiet?","Can the frame judge integration rather than only activity?"]
   },
   site:{
@@ -698,7 +691,7 @@ const walkthrough = {
   sharedhub:{
     deps:["A shared output exists and contributions are underway","Architecture shows routes into the output","Investment logic is still visible"],
     actions:["Recheck that every contribution points to the same object","Name the network-scale value of the output","Identify drift back toward parallel projects"],
-    handoff:["Centers synthesis and funder communication","Gives the walkthrough its main persuasive claim"],
+    handoff:["Centers synthesis and funder communication","Keeps the shared output visible during collaborative building"],
     review:["Does every contribution change the same thing?","Would the output be weaker or impossible without multiple pods?"]
   },
   convening:{
@@ -708,10 +701,10 @@ const walkthrough = {
     review:["Is this convening designed for integration?","What decision has to be made before people leave?"]
   },
   coordinator:{
-    deps:["Integration labour is recognized as a core role","Budget and authority can support the role","Pods accept a weaving function"],
-    actions:["Name the person or team holding synthesis","Give them access to pod material and decision spaces","Clarify authority to flag drift, gaps, and contradictions"],
-    handoff:["Holds research memory across cycles","Makes integration less dependent on whoever is loudest or most available"],
-    review:["Who is paid and empowered to hold synthesis?","What can this role decide, and what must go back to pods?"]
+    deps:["The HQ Project Manager role is operationally clear","Integration labour is recognized as a distinct research role","Budget and authority can support the role"],
+    actions:["Name the person or team holding research synthesis","Separate operational coordination from research integration","Clarify authority to flag drift, gaps, and contradictions"],
+    handoff:["Holds research memory across cycles","Lets the Project Manager manage operations without absorbing all synthesis labour"],
+    review:["Who is paid and empowered to hold synthesis?","What can the research integrator decide, and what must go back to pods?"]
   },
   memos:{
     deps:["Convenings and exchanges generate decisions and tensions","A synthesis owner exists","There is a format people will actually use"],
@@ -844,8 +837,6 @@ const S = {
   thumbs:Object.fromEntries(steps.map(s => [s.id,""]))
 };
 
-critical.slice(0,6).forEach(id => S.status[id] = "fragile");
-
 function phaseFor(id){return phases.find(p => p.id === id)}
 function stepPhase(step){return phaseFor(step.phase)}
 function clamp(n,min,max){return Math.max(min,Math.min(max,n))}
@@ -882,17 +873,17 @@ function renderPhaseReview(){
   const fragile = phaseSteps.filter(s => S.status[s.id] === "fragile").length;
   document.getElementById("phaseReview").style.setProperty("--phase",ph.color);
   document.getElementById("phaseReview").innerHTML =
-    '<div class="phase-kicker">Review lens for this phase</div>' +
+    '<div class="phase-kicker">Review lens for this cycle</div>' +
     '<div class="phase-review-title">' + ph.name + '</div>' +
     '<div class="checkpoint-summary"><b>Why this checkpoint exists</b>' + r.now + '</div>' +
     '<div class="dependency-strip">' +
-      '<span class="dependency-chip">Step ' + phasePosition + ' of ' + phaseSteps.length + ' in phase</span>' +
+      '<span class="dependency-chip">Step ' + phasePosition + ' of ' + phaseSteps.length + ' in cycle</span>' +
       '<span class="dependency-chip">' + ready + ' ready</span>' +
       '<span class="dependency-chip">' + fragile + ' fragile</span>' +
     '</div>' +
     '<div class="phase-time">' +
-      '<div class="phase-time-box phase-total"><div class="phase-time-cap">Total phase window</div><div class="phase-time-num">' + ph.time + '</div><div class="phase-time-note">' + ph.duration + ' across ' + phaseSteps.length + ' steps</div></div>' +
-      '<div class="phase-time-box phase-step"><div class="phase-time-cap">Current step window</div><div class="phase-time-num">' + t.window + '</div><div class="phase-time-note">' + step.title + ' is step ' + phasePosition + ' inside this phase</div></div>' +
+      '<div class="phase-time-box phase-total"><div class="phase-time-cap">Total cycle window</div><div class="phase-time-num">' + ph.time + '</div><div class="phase-time-note">' + ph.duration + ' across ' + phaseSteps.length + ' steps</div></div>' +
+      '<div class="phase-time-box phase-step"><div class="phase-time-cap">Current step window</div><div class="phase-time-num">' + t.window + '</div><div class="phase-time-note">' + step.title + ' is step ' + phasePosition + ' inside this cycle</div></div>' +
     '</div>' +
     '<div class="phase-gate"><div class="phase-gate-label">Entry gate</div><div class="phase-gate-text">' + r.entry + '</div></div>' +
     '<div class="phase-gate"><div class="phase-gate-label">Exit gate</div><div class="phase-gate-text">' + r.exit + '</div></div>' +
@@ -925,7 +916,7 @@ function render(){
   const step = steps[S.idx];
   const ph = stepPhase(step);
   document.documentElement.style.setProperty("--phase",ph.color);
-  document.getElementById("phasePill").textContent = ph.n + " - " + ph.short + " / " + ph.time;
+  document.getElementById("phasePill").textContent = "Cycle " + ph.n + " - " + ph.short + " / " + ph.time;
   document.getElementById("stepEye").innerHTML = "Beat " + (S.idx + 1) + " / " + steps.length + " - " + ph.name + (step.mvp ? '<span class="mvp-tag">Core path</span>' : "");
   document.getElementById("stepIcon").innerHTML = iconMarkup(step,"");
   document.getElementById("stepTitle").textContent = step.title;
@@ -974,13 +965,13 @@ function renderMap(){
 }
 
 function renderRail(){
-  document.getElementById("phaseRail").innerHTML = phases.filter(p => p.id !== "hub").map(p => {
+  document.getElementById("phaseRail").innerHTML = phases.map(p => {
     const phaseSteps = steps.filter(s => s.phase === p.id);
     const done = phaseSteps.reduce((sum,s) => sum + statusScore(S.status[s.id]),0);
     const pct = Math.round((done / phaseSteps.length) * 100);
     const current = steps[S.idx].phase === p.id;
     return '<div class="phase-card ' + (current ? "current" : "") + '" style="--phase:' + p.color + '">' +
-      '<div class="phase-num">Phase ' + p.n + '</div><div class="phase-name">' + p.name + '</div>' +
+      '<div class="phase-num">Cycle ' + p.n + '</div><div class="phase-name">' + p.name + '</div>' +
       '<div class="phase-promise">' + p.promise + '</div>' +
       '<div class="phase-meta"><span>' + phaseSteps.length + ' beats</span><span>' + p.time + '</span><span>' + pct + '% tested</span></div>' +
       '<div class="mini-meter"><div class="mini-fill" style="width:' + pct + '%"></div></div>' +
